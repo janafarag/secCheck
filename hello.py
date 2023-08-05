@@ -1,3 +1,3 @@
-msg = "roll a dice!"
+msgs = "roll a dice!"
 
-print(msg.capitalize())
+print(msgs.capitalize())
