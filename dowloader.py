@@ -8,25 +8,33 @@ filename = "my_file.json"
 limit_enabled = True
 
 
+# TODO: collect language infos for all jobs to set language setting in owasp dependency check and filter not-supported languges
+# so results are more accurate
+# TODO: add ordering by stars and forks and desc and asc
+# TODO: paging 
+
 def downloader(repo_url, local_dir):
     # Check if the file has already been cloned
     # Clone repo to local directory
     repo.clone_from(url=repo_url, to_path=local_dir)
 
 
-def getUrlsToDownloadForRep(keyword="", language=""):  # repository language
+def getUrlsToDownloadForRep(createdFrom, createdTill, keyword="", language=""):  # repository langauge
     """_get clone URLs for repositories filtered by a specific language
     (options include: js, python, ruby, java, csharp, php, typescript, swift, go, kotlin)
     or a specific keyword or both_
 
     Args:
+        createdFrom(str): start date to filter repositories by
+        createdTill(str): end date to filter repositories by
         keyword (str, optional): keyword to be filtered by in the repository info. Defaults to "".
         language (str, optional): _description_. Defaults to "".
-        At least one of the parameters have to be selected or filled out for the API call to work
     """
     keyword = "react"
     language = "js"
-    url = f"https://api.github.com/search/repositories?q={keyword}+language:{language}"
+    createdFrom = "2019-01-01"
+    createdTill = "2020-12-31" # created:2019-01-01..2020-12-31+react+language:js
+    url = f"https://api.github.com/search/repositories?q=created:{createdFrom}..{createdTill}+{keyword}+language:{language}"
     resp = getResponseForUrl(url)
     clone_urls = processResponseForRep(resp)
 
@@ -110,18 +118,25 @@ def getUrlsToDownloadForCommits(keyword):
     pprint.pprint(clone_urls_with_commit_hashes)
 
 
-def getUrlsToDownloadForIssues(keyword):
+def getUrlsToDownloadForIssues(keyword, state, createdFrom, createdTill):
+
     """_get clone urls of the repositories
     filtering all issues of all repositories by a specific keyword.
     purpose: analyzing behavior while publishing issues and relation to security awareness_
 
     Args:
+        state(str): state of the issues to be filtered by (options include: open and closed)
+        createdFrom(str): start date to filter issues by
+        createdTill(str): end date to filter issues by
         keyword (str): keyword that should be filtered by filtering
         all issues for every repository.
     """
 
     keyword = "Zero Day"
-    url = f"https://api.github.com/search/issues?q={keyword}+is:issue"
+    state = "closed"
+    createdFrom = "2010-01-01"
+    createdTill = "2020-12-31" 
+    url = f"https://api.github.com/search/issues?q={keyword}+is:issue+state:{state}+created:{createdFrom}..{createdTill}"
     issues_response = getResponseForUrl(url)
     repo_urls = getRepoUrlsFromItems(issues_response)
     repo_urls_unique = list(set(repo_urls))
@@ -273,7 +288,7 @@ def processRepoIds(rep_ids):
     urls = []
 
     for repo in rep_ids:
-        response = getResponseForUrl(f"{ repo }")
+        response = getResponseForUrl(f"https://api.github.com/repositories/{ repo }")
 
         json_resp = js.loads(response.text)
         print(json_resp["clone_url"])
@@ -301,7 +316,7 @@ def processRepoUrls(repo_urls):
     for repo in repo_urls:
         response = getResponseForUrl(
             f"{ repo }"
-        )  # may be insecure if repo url contains executable
+        )  # TODO: check repo url if secure
 
         json_resp = js.loads(response.text)
         print(json_resp["clone_url"])
@@ -347,7 +362,8 @@ def readUrlsFromJson():
 
 # createJobForUrls(getUrlsToDownload())
 # readUrlsFromJson()
-# getUrlsToDownloadForCode("", "", "")
+getUrlsToDownloadForCode("", "", "")
 # getUrlsAndCommitHashToDownloadForCode("")
-# getUrlsToDownloadForCommits("")
-getUrlsToDownloadForIssues("")
+# getUrlsToDownloadForCommits("") 
+# getUrlsToDownloadForIssues("", "", "", "")
+# getUrlsToDownloadForRep("", "")
