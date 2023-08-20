@@ -14,15 +14,32 @@ def downloader(repo_url, local_dir):
     repo.clone_from(url=repo_url, to_path=local_dir)
 
 
-def getUrlsToDownloadForRep(keyword, language):  # repository language
+def getUrlsToDownloadForRep(keyword = "", language = ""):  # repository language
+    """_get clone URLs for repositories filtered by a specific language 
+    (options include: js, python, ruby, java, csharp, php, typescript, swift, go, kotlin)
+    or a specific keyword or both_
+
+    Args:
+        keyword (str, optional): keyword to be filtered by in the repository info. Defaults to "".
+        language (str, optional): _description_. Defaults to "".
+        At least one of the parameters have to be selected or filled out for the API call to work
+    """
     keyword = "react"
-    language = "js"  # options include: js, python, ruby, java, csharp, php, typescript, swift, go, kotlin
-    url = f"https://api.github.com/search/repositories?q={keyword}&language:{language}"
+    language = "js"  
+    url = f"https://api.github.com/search/repositories?q={keyword}+language:{language}"
     resp = getResponseForUrl(url)
     clone_urls = processResponseForRep(resp)
 
 
 def getUrlsAndCommitHashToDownloadForCode(keyword):
+    """_get clone urls with the unique hash codes for a specific commit in the repository
+    filtering the code of all commits of all repositories by a specific keyword. 
+    purpose: analyying specific commits based on behavior while coding_
+
+    Args:
+        keyword (str): keyword that should be filtered by in the complete code 
+        filtering all commits for every repository.
+    """
     keyword = "bug"
     url = f"https://api.github.com/search/code?q={keyword}"
     code_response = getResponseForUrl(url)
@@ -34,8 +51,24 @@ def getUrlsAndCommitHashToDownloadForCode(keyword):
 
 
 def getUrlsToDownloadForCode(
-    keyword, label, total_amount
-):  # exception handling if topic does not exist
+    keyword, label = "", total_amount = 0
+):
+    """_get clone urls of repositories
+    filtering the code of all commits of all repositories by a specific keyword
+    purspose: analyzing most recent commit absed on general behavior while coding
+    The repositories to be analyzed can be further filtered when filtering by the amount of existence
+    a specific label
+    purpose: analyze the workflow of the repository_
+
+    Args:
+        keyword (_type_): _description_
+        label (str, optional): defualt Github label. Defaults to "".
+        (options include: bug, documentation, duplicate, enhancement, good first issue, help wanted, invalid, question, wontfix)
+        total_amount (int, optional): _description_. Defaults to 0.
+        label and total_amount are both mandatory if limit_enabled is true
+        ( aka label limit toggle button is on)
+    """
+    
     keyword = "bug"
     url = f"https://api.github.com/search/code?q={keyword}"
     code_response = getResponseForUrl(url)
@@ -60,6 +93,15 @@ def getUrlsToDownloadForCode(
 
 
 def getUrlsToDownloadForCommits(keyword):
+
+    """_get clone urls with the unique hash codes for a specific commit in the repository
+    filtering all commit messages of all repositories by a specific keyword. 
+    purpose: analyzing specific commits based on behavior while coding (commiting)_
+
+    Args:
+        keyword (str): keyword that should be filtered by in the complete code 
+        filtering all commits for every repository.
+    """
     keyword = "fix"
 
     url = f"https://api.github.com/search/commits?q=message:{keyword}"
@@ -73,7 +115,20 @@ def getUrlsToDownloadForCommits(keyword):
 
 def limitRepoIdsWithExistingLabels(
     label, rep_ids, total_amount
-):  # label: bug is interesting but repository id required
+):
+    """_Return limited repository ids. Only return the repository ids that meet 
+    the defined criteria of having a specific label with a certain amount of times
+    purpose: analyzing the workflow behavior_
+
+    Args:
+        label (str): Github default label
+        rep_ids (List[int]): repository ids that should be filtered further by label criteria
+        total_amount (int): amount of times a label has to be present in the repository
+        to meet the filtering criteria
+
+    Returns:
+        List[int]: filtered list of repository ids
+    """
     limited_repos = []
     label = "bug"
     total_amount = 1  # has at least one labeled bug
@@ -87,12 +142,16 @@ def limitRepoIdsWithExistingLabels(
     return limited_repos
 
 
-# can be used in combination with code search to limit the search for repos with existing
-# documentation labels or bug labels or a sspecific amount of them to filter the unique repo ids further and
-# make more assumptions about coding style maybe
-
 
 def getResponseForUrl(search_url):
+    """_get the API repsonse of the Github API for a specific url_
+
+    Args:
+        search_url (str): search url for the Github API
+
+    Returns:
+     requests.Response : reponse to the API call
+    """
 
     response = requests.get(
         search_url,
@@ -106,7 +165,13 @@ def getResponseForUrl(search_url):
 
 
 def processResponseForRep(response):
-    ## download dependency api json from github
+
+    """_process the response for the repository search and return the clone URLs
+      in the response_
+
+    Returns:
+        List[str]: list of clone URLs
+    """
 
     # get clone_urls of the repos that should be downloaded
     urls = []
@@ -124,9 +189,16 @@ def processResponseForRep(response):
 
 
 def getRepIdsFromItems(response):
-    ## download dependency api json from github
 
-    # get ids of the repos that should be downloaded
+    """_return repository ids from the response 
+    (for code search and commit search response structures)_
+
+    Args:
+        response(requests.Response) : reponse to an API call
+
+    Returns:
+        List[int]: list of repository ids
+    """
     rep_ids = []
     json_array = js.loads(response.text)
 
@@ -138,11 +210,16 @@ def getRepIdsFromItems(response):
 
 
 def getCommitShaFromItems(response):
-    # get commit ids and build clone url with specific commit of the repos that should be downloaded
-    # then analyse the commit and see if vuln how long ago published or known
-    # -> maybe detect vulnerable repositories with lack of awareness for security
 
-    # get commit hashes of the version that should be downloaded
+    """_return commit hashes (sha) from the response 
+    (for code search and commit search response structures)_
+
+    Args:
+        response(requests.Response) : reponse to an API call
+
+    Returns:
+        (List[str]): commit hashes (sha field)
+    """
     commit_hashes = []
     json_array = js.loads(response.text)
 
@@ -154,7 +231,17 @@ def getCommitShaFromItems(response):
 
 
 def processRepoIds(rep_ids):
-    # get clone_urls of the repos that should be downloaded
+
+    """get clone URLs of the given repositories
+
+    Args:
+        rep_ids (List[int]): list of repository ids
+
+    Returns:
+        List [str]: list of clone urls of all repositories given in the rep_ids parameter
+        can contain duplicate elements if the repository ids in the given list are duplicate.
+        returns the clone urls in the same order corresponding to the given parameter.
+    """
     urls = []
 
     for repo in rep_ids:
@@ -169,6 +256,18 @@ def processRepoIds(rep_ids):
 
 
 def responseMeetsCriteria(response, total_amount):
+
+    """_Return True if the given reponse meets the total amount criteria specified by the 
+    total_amount parameter_
+
+    Args:
+        response (requests.Response): reponse to an API call
+        total_amount (int): threshhold for the total count in the respone
+
+    Returns:
+        True: if the total count in the response is equal to or higher than the specified threshhold
+          by the parameter total_amount
+    """
     json_resp = js.loads(response.text)
     print(json_resp["total_count"])
     total_count = json_resp["total_count"]
