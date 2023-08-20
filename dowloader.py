@@ -14,8 +14,8 @@ def downloader(repo_url, local_dir):
     repo.clone_from(url=repo_url, to_path=local_dir)
 
 
-def getUrlsToDownloadForRep(keyword = "", language = ""):  # repository language
-    """_get clone URLs for repositories filtered by a specific language 
+def getUrlsToDownloadForRep(keyword="", language=""):  # repository language
+    """_get clone URLs for repositories filtered by a specific language
     (options include: js, python, ruby, java, csharp, php, typescript, swift, go, kotlin)
     or a specific keyword or both_
 
@@ -25,7 +25,7 @@ def getUrlsToDownloadForRep(keyword = "", language = ""):  # repository language
         At least one of the parameters have to be selected or filled out for the API call to work
     """
     keyword = "react"
-    language = "js"  
+    language = "js"
     url = f"https://api.github.com/search/repositories?q={keyword}+language:{language}"
     resp = getResponseForUrl(url)
     clone_urls = processResponseForRep(resp)
@@ -33,11 +33,11 @@ def getUrlsToDownloadForRep(keyword = "", language = ""):  # repository language
 
 def getUrlsAndCommitHashToDownloadForCode(keyword):
     """_get clone urls with the unique hash codes for a specific commit in the repository
-    filtering the code of all commits of all repositories by a specific keyword. 
+    filtering the code of all commits of all repositories by a specific keyword.
     purpose: analyying specific commits based on behavior while coding_
 
     Args:
-        keyword (str): keyword that should be filtered by in the complete code 
+        keyword (str): keyword that should be filtered by in the complete code
         filtering all commits for every repository.
     """
     keyword = "bug"
@@ -50,9 +50,7 @@ def getUrlsAndCommitHashToDownloadForCode(keyword):
     pprint.pprint(clone_urls_with_commit_hashes)
 
 
-def getUrlsToDownloadForCode(
-    keyword, label = "", total_amount = 0
-):
+def getUrlsToDownloadForCode(keyword, label="", total_amount=0):
     """_get clone urls of repositories
     filtering the code of all commits of all repositories by a specific keyword
     purspose: analyzing most recent commit absed on general behavior while coding
@@ -68,7 +66,7 @@ def getUrlsToDownloadForCode(
         label and total_amount are both mandatory if limit_enabled is true
         ( aka label limit toggle button is on)
     """
-    
+
     keyword = "bug"
     url = f"https://api.github.com/search/code?q={keyword}"
     code_response = getResponseForUrl(url)
@@ -93,13 +91,12 @@ def getUrlsToDownloadForCode(
 
 
 def getUrlsToDownloadForCommits(keyword):
-
     """_get clone urls with the unique hash codes for a specific commit in the repository
-    filtering all commit messages of all repositories by a specific keyword. 
+    filtering all commit messages of all repositories by a specific keyword.
     purpose: analyzing specific commits based on behavior while coding (commiting)_
 
     Args:
-        keyword (str): keyword that should be filtered by in the complete code 
+        keyword (str): keyword that should be filtered by in the complete code
         filtering all commits for every repository.
     """
     keyword = "fix"
@@ -113,10 +110,26 @@ def getUrlsToDownloadForCommits(keyword):
     pprint.pprint(clone_urls_with_commit_hashes)
 
 
-def limitRepoIdsWithExistingLabels(
-    label, rep_ids, total_amount
-):
-    """_Return limited repository ids. Only return the repository ids that meet 
+def getUrlsToDownloadForIssues(keyword):
+    """_get clone urls of the repositories
+    filtering all issues of all repositories by a specific keyword.
+    purpose: analyzing behavior while publishing issues and relation to security awareness_
+
+    Args:
+        keyword (str): keyword that should be filtered by filtering
+        all issues for every repository.
+    """
+
+    keyword = "Zero Day"
+    url = f"https://api.github.com/search/issues?q={keyword}+is:issue"
+    issues_response = getResponseForUrl(url)
+    repo_urls = getRepoUrlsFromItems(issues_response)
+    repo_urls_unique = list(set(repo_urls))
+    clone_urls = processRepoUrls(repo_urls_unique)
+
+
+def limitRepoIdsWithExistingLabels(label, rep_ids, total_amount):
+    """_Return limited repository ids. Only return the repository ids that meet
     the defined criteria of having a specific label with a certain amount of times
     purpose: analyzing the workflow behavior_
 
@@ -142,7 +155,6 @@ def limitRepoIdsWithExistingLabels(
     return limited_repos
 
 
-
 def getResponseForUrl(search_url):
     """_get the API repsonse of the Github API for a specific url_
 
@@ -165,7 +177,6 @@ def getResponseForUrl(search_url):
 
 
 def processResponseForRep(response):
-
     """_process the response for the repository search and return the clone URLs
       in the response_
 
@@ -189,15 +200,14 @@ def processResponseForRep(response):
 
 
 def getRepIdsFromItems(response):
-
-    """_return repository ids from the response 
+    """_return repository ids from the response
     (for code search and commit search response structures)_
 
     Args:
         response(requests.Response) : reponse to an API call
 
     Returns:
-        List[int]: list of repository ids
+        List[int]: list of repository ids (can be duplicate in list)
     """
     rep_ids = []
     json_array = js.loads(response.text)
@@ -210,8 +220,7 @@ def getRepIdsFromItems(response):
 
 
 def getCommitShaFromItems(response):
-
-    """_return commit hashes (sha) from the response 
+    """_return commit hashes (sha) from the response
     (for code search and commit search response structures)_
 
     Args:
@@ -230,9 +239,28 @@ def getCommitShaFromItems(response):
     return commit_hashes
 
 
-def processRepoIds(rep_ids):
+def getRepoUrlsFromItems(response):
+    """_return repository urls from the response
+    (for issues search response structures)_
 
-    """get clone URLs of the given repositories
+    Args:
+        response(requests.Response) : reponse to an API call
+
+    Returns:
+        (List[str]): list of repository URLs included in the reponse  (can be duplicate in list)
+    """
+    repo_urls = []
+    json_array = js.loads(response.text)
+
+    for json in json_array["items"]:
+        print(json["repository_url"])
+        repo_urls.append(json["repository_url"])
+
+    return repo_urls
+
+
+def processRepoIds(rep_ids):
+    """get clone URLs of the given repositories (repository ids)
 
     Args:
         rep_ids (List[int]): list of repository ids
@@ -245,7 +273,35 @@ def processRepoIds(rep_ids):
     urls = []
 
     for repo in rep_ids:
-        response = getResponseForUrl(f"https://api.github.com/repositories/{ repo }")
+        response = getResponseForUrl(f"{ repo }")
+
+        json_resp = js.loads(response.text)
+        print(json_resp["clone_url"])
+        urls.append(json_resp["clone_url"])
+
+    # probably these will be devided into 10 urls per JSON and forwarded as a job
+    return urls
+
+
+def processRepoUrls(repo_urls):
+    """_get clone URLs of the given repositories (repository URLs)_
+
+    Args:
+        repo_urls (List[str]): list of repository urls
+
+    Returns:
+    List [str]: list of clone urls of all repositories given in the repo_urls parameter
+    can contain duplicate elements if the repository ids in the given list are duplicate.
+    returns the clone urls in the same order corresponding to the given parameter.
+
+    """
+
+    urls = []
+
+    for repo in repo_urls:
+        response = getResponseForUrl(
+            f"{ repo }"
+        )  # may be insecure if repo url contains executable
 
         json_resp = js.loads(response.text)
         print(json_resp["clone_url"])
@@ -256,8 +312,7 @@ def processRepoIds(rep_ids):
 
 
 def responseMeetsCriteria(response, total_amount):
-
-    """_Return True if the given reponse meets the total amount criteria specified by the 
+    """_Return True if the given reponse meets the total amount criteria specified by the
     total_amount parameter_
 
     Args:
@@ -294,4 +349,5 @@ def readUrlsFromJson():
 # readUrlsFromJson()
 # getUrlsToDownloadForCode("", "", "")
 # getUrlsAndCommitHashToDownloadForCode("")
-getUrlsToDownloadForCommits("")
+# getUrlsToDownloadForCommits("")
+getUrlsToDownloadForIssues("")
