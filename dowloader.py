@@ -10,8 +10,8 @@ limit_enabled = True
 
 # TODO: collect language infos for all jobs to set language setting in owasp dependency check and filter not-supported languges
 # so results are more accurate
-# TODO: add ordering by stars and forks and desc and asc
-# TODO: paging 
+# TODO: paging
+
 
 def downloader(repo_url, local_dir):
     # Check if the file has already been cloned
@@ -19,27 +19,35 @@ def downloader(repo_url, local_dir):
     repo.clone_from(url=repo_url, to_path=local_dir)
 
 
-def getUrlsToDownloadForRep(createdFrom, createdTill, keyword="", language=""):  # repository langauge
+def getUrlsToDownloadForRep(
+    created_from, created_till, keyword="", language="", sort_by="", order=""
+):  # repository langauge
     """_get clone URLs for repositories filtered by a specific language
-    (options include: js, python, ruby, java, csharp, php, typescript, swift, go, kotlin)
     or a specific keyword or both_
 
     Args:
         createdFrom(str): start date to filter repositories by
         createdTill(str): end date to filter repositories by
         keyword (str, optional): keyword to be filtered by in the repository info. Defaults to "".
-        language (str, optional): _description_. Defaults to "".
+        language (str, optional): langauge of the code/repository. Defaults to "".
+        (options include: js, python, ruby, java, csharp, php, typescript, swift, go, kotlin)
+        sort_by (str, optional): property to be sorted by. Defaults to "".
+        (options include: forks, stars)
+        order (str, optional): order to be sorted with. Defaults to "".
+        (options include: asc and desc)
     """
     keyword = "react"
     language = "js"
-    createdFrom = "2019-01-01"
-    createdTill = "2020-12-31" # created:2019-01-01..2020-12-31+react+language:js
-    url = f"https://api.github.com/search/repositories?q=created:{createdFrom}..{createdTill}+{keyword}+language:{language}"
+    created_from = "2019-01-01"
+    created_till = "2020-12-31"
+    sort_by = "stars"
+    order = "desc"
+    url = f"https://api.github.com/search/repositories?q=created:{created_from}..{created_till}+{keyword}+language:{language}&sort={sort_by}&order={order}"
     resp = getResponseForUrl(url)
     clone_urls = processResponseForRep(resp)
 
 
-def getUrlsAndCommitHashToDownloadForCode(keyword):
+def getUrlsAndCommitHashToDownloadForCode(keyword, sort_by="", order=""):
     """_get clone urls with the unique hash codes for a specific commit in the repository
     filtering the code of all commits of all repositories by a specific keyword.
     purpose: analyying specific commits based on behavior while coding_
@@ -47,9 +55,13 @@ def getUrlsAndCommitHashToDownloadForCode(keyword):
     Args:
         keyword (str): keyword that should be filtered by in the complete code
         filtering all commits for every repository.
+        sort_by (str, optional): property to be sorted by. Defaults to "".
+        (options include: forks, stars)
+        order (str, optional): order to be sorted with. Defaults to "".
+        (options include: asc and desc)
     """
     keyword = "bug"
-    url = f"https://api.github.com/search/code?q={keyword}"
+    url = f"https://api.github.com/search/code?q={keyword}&sort={sort_by}&order={order}"
     code_response = getResponseForUrl(url)
     repo_ids = getRepIdsFromItems(code_response)
     clone_urls_complete = processRepoIds(repo_ids)
@@ -58,7 +70,7 @@ def getUrlsAndCommitHashToDownloadForCode(keyword):
     pprint.pprint(clone_urls_with_commit_hashes)
 
 
-def getUrlsToDownloadForCode(keyword, label="", total_amount=0):
+def getUrlsToDownloadForCode(keyword, label="", total_amount=0, sort_by="", order=""):
     """_get clone urls of repositories
     filtering the code of all commits of all repositories by a specific keyword
     purspose: analyzing most recent commit absed on general behavior while coding
@@ -73,12 +85,18 @@ def getUrlsToDownloadForCode(keyword, label="", total_amount=0):
         total_amount (int, optional): _description_. Defaults to 0.
         label and total_amount are both mandatory if limit_enabled is true
         ( aka label limit toggle button is on)
+        sort_by (str, optional): property to be sorted by. Defaults to "".
+        (options include: forks, stars)
+        order (str, optional): order to be sorted with. Defaults to "".
+        (options include: asc and desc)
     """
 
     keyword = "bug"
-    url = f"https://api.github.com/search/code?q={keyword}"
+    url = f"https://api.github.com/search/code?q={keyword}&sort={sort_by}&order={order}"
     code_response = getResponseForUrl(url)
     repo_ids = getRepIdsFromItems(code_response)
+    sort_by = "stars"
+    order = "desc"
 
     # no duplicate ids for efficiency write in Methodik
     rep_ids_unique = list(set(repo_ids))
@@ -93,12 +111,8 @@ def getUrlsToDownloadForCode(keyword, label="", total_amount=0):
 
     clone_urls_limited_and_unique = processRepoIds(repo_ids)
 
-    # save a list of repository ids as a product and get for each one the clone url and put into a list
-    # ability to minimize the search for label: e.g. bug and and e.g. only getting clone urls for repos with bugs
-    # or repos with existing documentation, and maybe even a specific aamount
 
-
-def getUrlsToDownloadForCommits(keyword):
+def getUrlsToDownloadForCommits(keyword, sort_by="", order=""):
     """_get clone urls with the unique hash codes for a specific commit in the repository
     filtering all commit messages of all repositories by a specific keyword.
     purpose: analyzing specific commits based on behavior while coding (commiting)_
@@ -106,10 +120,16 @@ def getUrlsToDownloadForCommits(keyword):
     Args:
         keyword (str): keyword that should be filtered by in the complete code
         filtering all commits for every repository.
+        sort_by (str, optional): property to be sorted by. Defaults to "".
+        (options include: forks, stars)
+        order (str, optional): order to be sorted with. Defaults to "".
+        (options include: asc and desc)
     """
     keyword = "fix"
+    sort_by = "stars"
+    order = "desc"
 
-    url = f"https://api.github.com/search/commits?q=message:{keyword}"
+    url = f"https://api.github.com/search/commits?q=message:{keyword}&sort={sort_by}&order={order}"
     commit_response = getResponseForUrl(url)
     repo_ids = getRepIdsFromItems(commit_response)
     clone_urls = processRepoIds(repo_ids)
@@ -118,8 +138,7 @@ def getUrlsToDownloadForCommits(keyword):
     pprint.pprint(clone_urls_with_commit_hashes)
 
 
-def getUrlsToDownloadForIssues(keyword, state, createdFrom, createdTill):
-
+def getUrlsToDownloadForIssues(keyword, state, created_from, created_till, sort_by="", order=""):
     """_get clone urls of the repositories
     filtering all issues of all repositories by a specific keyword.
     purpose: analyzing behavior while publishing issues and relation to security awareness_
@@ -130,13 +149,19 @@ def getUrlsToDownloadForIssues(keyword, state, createdFrom, createdTill):
         createdTill(str): end date to filter issues by
         keyword (str): keyword that should be filtered by filtering
         all issues for every repository.
+        sort_by (str, optional): property to be sorted by. Defaults to "".
+        (options include: forks, stars)
+        order (str, optional): order to be sorted with. Defaults to "".
+        (options include: asc and desc)
     """
 
     keyword = "Zero Day"
     state = "closed"
-    createdFrom = "2010-01-01"
-    createdTill = "2020-12-31" 
-    url = f"https://api.github.com/search/issues?q={keyword}+is:issue+state:{state}+created:{createdFrom}..{createdTill}"
+    created_from = "2010-01-01"
+    created_till = "2020-12-31"
+    sort_by = "stars"
+    order = "desc"
+    url = f"https://api.github.com/search/issues?q={keyword}+is:issue+state:{state}+created:{created_from}..{created_till}&sort={sort_by}&order={order}"
     issues_response = getResponseForUrl(url)
     repo_urls = getRepoUrlsFromItems(issues_response)
     repo_urls_unique = list(set(repo_urls))
@@ -314,9 +339,7 @@ def processRepoUrls(repo_urls):
     urls = []
 
     for repo in repo_urls:
-        response = getResponseForUrl(
-            f"{ repo }"
-        )  # TODO: check repo url if secure
+        response = getResponseForUrl(f"{ repo }")  # TODO: check repo url if secure
 
         json_resp = js.loads(response.text)
         print(json_resp["clone_url"])
@@ -362,8 +385,8 @@ def readUrlsFromJson():
 
 # createJobForUrls(getUrlsToDownload())
 # readUrlsFromJson()
-getUrlsToDownloadForCode("", "", "")
+# getUrlsToDownloadForCode("", "", "")
 # getUrlsAndCommitHashToDownloadForCode("")
-# getUrlsToDownloadForCommits("") 
+# getUrlsToDownloadForCommits("")
 # getUrlsToDownloadForIssues("", "", "", "")
 # getUrlsToDownloadForRep("", "")
