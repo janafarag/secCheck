@@ -253,7 +253,6 @@ def getRepIdsFromItems(response):
     json_array = js.loads(response.text)
 
     for json in json_array["items"]:
-        print(json["repository"]["id"])
         rep_ids.append(json["repository"]["id"])
 
     return rep_ids
@@ -273,7 +272,6 @@ def getCommitShaFromItems(response):
     json_array = js.loads(response.text)
 
     for json in json_array["items"]:
-        print(json["sha"])
         commit_hashes.append(json["sha"])
 
     return commit_hashes
@@ -293,7 +291,6 @@ def getRepoUrlsFromItems(response):
     json_array = js.loads(response.text)
 
     for json in json_array["items"]:
-        print(json["repository_url"])
         repo_urls.append(json["repository_url"])
 
     return repo_urls
@@ -362,7 +359,6 @@ def responseMeetsCriteria(response, total_amount):
           by the parameter total_amount
     """
     json_resp = js.loads(response.text)
-    print(json_resp["total_count"])
     total_count = json_resp["total_count"]
 
     return total_count >= total_amount
@@ -385,8 +381,8 @@ def readUrlsFromJson():
 
 # createJobForUrls(getUrlsToDownload())
 # readUrlsFromJson()
-# getUrlsToDownloadForCode("", "", "")
-# getUrlsAndCommitHashToDownloadForCode("")
-# getUrlsToDownloadForCommits("")
-# getUrlsToDownloadForIssues("", "", "", "")
-# getUrlsToDownloadForRep("", "")
+getUrlsToDownloadForCode("", "", "")
+getUrlsAndCommitHashToDownloadForCode("")
+getUrlsToDownloadForCommits("")
+getUrlsToDownloadForIssues("", "", "", "")
+getUrlsToDownloadForRep("", "")
