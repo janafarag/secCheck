@@ -26,6 +26,7 @@ def getUrlsToDownloadForRep(
 ):
     """_get clone URLs for repositories filtered by a specific language
     or a specific keyword or both_
+        Jobs in JSON format with the necessary infromation for analysis are created (clone urls and language)
 
     Args:
         createdFrom(str): start date to filter repositories by
@@ -59,6 +60,7 @@ def getUrlsAndCommitHashToDownloadForCode(keyword, sort_by="", order=""):
     """_get clone urls with the unique hash codes for a specific commit in the repository
     filtering the code of all commits of all repositories by a specific keyword.
     purpose: analyying specific commits based on behavior while coding_
+    Jobs in JSON format with the necessary infromation for analysis are created (clone urls and language and commit hashes)
 
     Args:
         keyword (str): keyword that should be filtered by in the complete code
@@ -85,6 +87,7 @@ def getUrlsToDownloadForCode(keyword, label="", total_amount=0, sort_by="", orde
     The repositories to be analyzed can be further filtered when filtering by the amount of existence
     a specific label
     purpose: analyze the workflow of the repository_
+    Jobs in JSON format with the necessary infromation for analysis are created (clone urls and language)
 
     Args:
         keyword (_type_): _description_
@@ -125,6 +128,7 @@ def getUrlsToDownloadForCommits(keyword, sort_by="", order=""):
     """_get clone urls with the unique hash codes for a specific commit in the repository
     filtering all commit messages of all repositories by a specific keyword.
     purpose: analyzing specific commits based on behavior while coding (commiting)_
+    Jobs in JSON format with the necessary infromation for analysis are created (clone urls and language and commit hashes)
 
     Args:
         keyword (str): keyword that should be filtered by in the complete code
@@ -150,6 +154,7 @@ def getUrlsToDownloadForIssues(keyword, state, created_from, created_till, sort_
     """_get clone urls of the repositories
     filtering all issues of all repositories by a specific keyword.
     purpose: analyzing behavior while publishing issues and relation to security awareness_
+    Jobs in JSON format with the necessary infromation for analysis are created (clone urls and language)
 
     Args:
         state(str): state of the issues to be filtered by (options include: open and closed)
@@ -235,6 +240,7 @@ def processResponseForRep(response, filter_languages):
 
     Returns:
         List[str]: list of clone URLs
+        List[str]: list of corresponding languages
     """
 
     # get clone_urls of the repos that should be downloaded
@@ -326,6 +332,7 @@ def processRepoIds(rep_ids):
         List [str]: list of clone urls of all repositories given in the rep_ids parameter
         can contain duplicate elements if the repository ids in the given list are duplicate.
         returns the clone urls in the same order corresponding to the given parameter.
+        List[str]: list of corresponding languages
     """
     urls = []
     languages = []
@@ -352,6 +359,7 @@ def processRepoUrls(repo_urls):
     List [str]: list of clone urls of all repositories given in the repo_urls parameter
     can contain duplicate elements if the repository ids in the given list are duplicate.
     returns the clone urls in the same order corresponding to the given parameter.
+    List[str]: list of corresponding languages
 
     """
 
