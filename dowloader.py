@@ -3,15 +3,35 @@ from git import repo
 from pip._vendor import requests
 from secrets_1 import access_token
 import json as js
+import time
 
 filename = "my_file"
 global_counter = 1
 limit_enabled = True
-supported_languages = ["csharp", "java", "javascript", "python", "php", "go", "swift", "c", "cpp"] #spelling for repo filter
-supported_language_strings = ["C#", "Java", "JavaScript", "Python", "PHP", "Go", "Swift", "C", "C++"] # spelling in language field/property
+supported_languages = [
+    "csharp",
+    "java",
+    "javascript",
+    "python",
+    "php",
+    "go",
+    "swift",
+    "c",
+    "cpp",
+]  # spelling for repo filter
+supported_language_strings = [
+    "C#",
+    "Java",
+    "JavaScript",
+    "Python",
+    "PHP",
+    "Go",
+    "Swift",
+    "C",
+    "C++",
+]  # spelling in language field/property
 
 
-# TODO: paging
 # TODO: get input from user / stop faking input
 
 
@@ -23,7 +43,7 @@ def downloader(repo_url, local_dir):
 
 def getUrlsToDownloadForRep(
     created_from, created_till, keyword="", language="", sort_by="", order=""
-):
+): #Repo
     """_get clone URLs for repositories filtered by a specific language
     or a specific keyword or both_
         Jobs in JSON format with the necessary infromation for analysis are created (clone urls and language)
@@ -41,22 +61,31 @@ def getUrlsToDownloadForRep(
     """
     keyword = "react"
     language = "js"
-    created_from = "2019-01-01"
+    created_from = "2020-12-30"
     created_till = "2020-12-31"
     sort_by = "stars"
     order = "desc"
-    url = f"https://api.github.com/search/repositories?q=created:{created_from}..{created_till}+{keyword}+language:{language}&sort={sort_by}&order={order}"
-    resp = getResponseForUrl(url)
-    
     filter_languages = False
-    if(language == ""): # if not language selected filter for only supported languages
+    if language == "":  # if not language selected filter for only supported languages
         filter_languages = True
-    # create jobs directly in method so there isn't an unnecessary iteration
-    clone_urls, languages = processResponseForRep(resp, filter_languages)
-    createJobForUrls(clone_urls, languages)
+
+    # pagination for 1000 results
+    for i in range(40):
+        # so rate limit is not reached
+        time.sleep(1)
+        url = (
+            f"https://api.github.com/search/repositories?q=created:{created_from}..{created_till}+{keyword}"
+            f"+language:{language}&sort={sort_by}&order={order}&per_page=25&page={i}"
+        )
+        resp = getResponseForUrl(url)
+        # create jobs directly in method so there isn't an unnecessary iteration
+        clone_urls, languages, total_count_exceeded = processResponseForRep(resp, filter_languages)
+        if total_count_exceeded: #no more results
+            break
+        createJobForUrls(clone_urls, languages)
 
 
-def getUrlsAndCommitHashToDownloadForCode(keyword, sort_by="", order=""):
+def getUrlsAndCommitHashToDownloadForCode(keyword, sort_by="", order=""): # code_specific
     """_get clone urls with the unique hash codes for a specific commit in the repository
     filtering the code of all commits of all repositories by a specific keyword.
     purpose: analyying specific commits based on behavior while coding_
@@ -71,16 +100,23 @@ def getUrlsAndCommitHashToDownloadForCode(keyword, sort_by="", order=""):
         (options include: asc and desc)
     """
     keyword = "bug"
-    url = f"https://api.github.com/search/code?q={keyword}&sort={sort_by}&order={order}"
-    code_response = getResponseForUrl(url)
-    repo_ids = getRepIdsFromItems(code_response)
-    clone_urls_complete, languages = processRepoIds(repo_ids)
-    commit_hashes = getCommitShaFromItems(code_response)
-    createJobForUrls(clone_urls=clone_urls_complete, languages= languages, hashes= commit_hashes)
-    
+
+    # pagination
+    for i in range(40):
+        url = (
+            f"https://api.github.com/search/code?q={keyword}&sort={sort_by}&order={order}"
+            f"&per_page=25&page={i}"
+        )
+        code_response = getResponseForUrl(url)
+        repo_ids = getRepIdsFromItems(code_response)
+        clone_urls_complete, languages = processRepoIds(repo_ids)
+        commit_hashes = getCommitShaFromItems(code_response)
+        createJobForUrls(
+            clone_urls=clone_urls_complete, languages=languages, hashes=commit_hashes
+        )
 
 
-def getUrlsToDownloadForCode(keyword, label="", total_amount=0, sort_by="", order=""):
+def getUrlsToDownloadForCode(keyword, label="", total_amount=0, sort_by="", order=""): # code_general
     """_get clone urls of repositories
     filtering the code of all commits of all repositories by a specific keyword
     purspose: analyzing most recent commit absed on general behavior while coding
@@ -92,7 +128,7 @@ def getUrlsToDownloadForCode(keyword, label="", total_amount=0, sort_by="", orde
     Args:
         keyword (_type_): _description_
         label (str, optional): defualt Github label. Defaults to "".
-        (options include: bug, documentation, duplicate, enhancement, good first issue, help wanted, invalid, question, wontfix)
+        (options include: bug, documentation, duplicate, enhancement, (good first issue), (help wanted), invalid, question, wontfix)
         total_amount (int, optional): _description_. Defaults to 0.
         label and total_amount are both mandatory if limit_enabled is true
         ( aka label limit toggle button is on)
@@ -103,28 +139,33 @@ def getUrlsToDownloadForCode(keyword, label="", total_amount=0, sort_by="", orde
     """
 
     keyword = "bug"
-    url = f"https://api.github.com/search/code?q={keyword}&sort={sort_by}&order={order}"
-    code_response = getResponseForUrl(url)
-    repo_ids = getRepIdsFromItems(code_response)
     sort_by = "stars"
     order = "desc"
 
-    # no duplicate ids for efficiency write in Methodik
-    rep_ids_unique = list(set(repo_ids))
-
-    if (
-        limit_enabled
-    ):  # maybe a toggle button with a drop down menu with possible lables
-        limited_repos = limitRepoIdsWithExistingLabels(
-            label, rep_ids_unique, total_amount
+    # pagination
+    for i in range(40):
+        url = (
+            f"https://api.github.com/search/code?q={keyword}&sort={sort_by}&order={order}"
+            f"&per_page=25&page={i}"
         )
-        repo_ids = limited_repos
+        code_response = getResponseForUrl(url)
+        repo_ids = getRepIdsFromItems(code_response)
+        rep_ids_unique = list(
+            set(repo_ids)
+        )  # no duplicate ids for efficiency write in Methodik
+        if (
+            limit_enabled
+        ):  # maybe a toggle button with a drop down menu with possible lables
+            limited_repos = limitRepoIdsWithExistingLabels(
+                label, rep_ids_unique, total_amount
+            )
+            repo_ids = limited_repos
 
-    clone_urls_limited_and_unique, languages = processRepoIds(repo_ids)
-    createJobForUrls(clone_urls= clone_urls_limited_and_unique, languages= languages)
+        clone_urls_limited_and_unique, languages = processRepoIds(repo_ids)
+        createJobForUrls(clone_urls=clone_urls_limited_and_unique, languages=languages)
 
 
-def getUrlsToDownloadForCommits(keyword, sort_by="", order=""):
+def getUrlsToDownloadForCommits(keyword, sort_by="", order=""): # commits
     """_get clone urls with the unique hash codes for a specific commit in the repository
     filtering all commit messages of all repositories by a specific keyword.
     purpose: analyzing specific commits based on behavior while coding (commiting)_
@@ -142,15 +183,24 @@ def getUrlsToDownloadForCommits(keyword, sort_by="", order=""):
     sort_by = "stars"
     order = "desc"
 
-    url = f"https://api.github.com/search/commits?q=message:{keyword}&sort={sort_by}&order={order}"
-    commit_response = getResponseForUrl(url)
-    repo_ids = getRepIdsFromItems(commit_response)
-    clone_urls, languages = processRepoIds(repo_ids)
-    commit_hashes = getCommitShaFromItems(commit_response)
-    createJobForUrls(clone_urls=clone_urls, languages= languages, hashes= commit_hashes)
+    # pagination
+    for i in range(40):
+        url = (
+            f"https://api.github.com/search/commits?q=message:{keyword}&sort={sort_by}&order={order}"
+            f"&per_page=25&page={i}"
+        )
+        commit_response = getResponseForUrl(url)
+        repo_ids = getRepIdsFromItems(commit_response)
+        clone_urls, languages = processRepoIds(repo_ids)
+        commit_hashes = getCommitShaFromItems(commit_response)
+        createJobForUrls(
+            clone_urls=clone_urls, languages=languages, hashes=commit_hashes
+        )
 
 
-def getUrlsToDownloadForIssues(keyword, state, created_from, created_till, sort_by="", order=""):
+def getUrlsToDownloadForIssues( 
+    keyword, state, created_from, created_till, sort_by="", order=""
+): #issues
     """_get clone urls of the repositories
     filtering all issues of all repositories by a specific keyword.
     purpose: analyzing behavior while publishing issues and relation to security awareness_
@@ -174,12 +224,18 @@ def getUrlsToDownloadForIssues(keyword, state, created_from, created_till, sort_
     created_till = "2020-12-31"
     sort_by = "stars"
     order = "desc"
-    url = f"https://api.github.com/search/issues?q={keyword}+is:issue+state:{state}+created:{created_from}..{created_till}&sort={sort_by}&order={order}"
-    issues_response = getResponseForUrl(url)
-    repo_urls = getRepoUrlsFromItems(issues_response)
-    repo_urls_unique = list(set(repo_urls))
-    clone_urls, languages = processRepoUrls(repo_urls_unique)
-    createJobForUrls(clone_urls=clone_urls, languages= languages)
+
+    # pagination
+    for i in range(34):
+        url = (
+            f"https://api.github.com/search/issues?q={keyword}+is:issue+state:{state}+created:{created_from}..{created_till}"
+            f"&sort={sort_by}&order={order}&per_page=30&page={i}"
+        )
+        issues_response = getResponseForUrl(url)
+        repo_urls = getRepoUrlsFromItems(issues_response)
+        repo_urls_unique = list(set(repo_urls))
+        clone_urls, languages = processRepoUrls(repo_urls_unique)
+        createJobForUrls(clone_urls=clone_urls, languages=languages)
 
 
 def limitRepoIdsWithExistingLabels(label, rep_ids, total_amount):
@@ -201,6 +257,7 @@ def limitRepoIdsWithExistingLabels(label, rep_ids, total_amount):
     total_amount = 1  # has at least one labeled bug
 
     for rep_id in rep_ids:
+        time.sleep(1.1)
         url = f"https://api.github.com/search/labels?q={label}&repository_id={rep_id}"
         codeResponse = getResponseForUrl(url)
         if responseMeetsCriteria(codeResponse, total_amount):
@@ -246,23 +303,27 @@ def processResponseForRep(response, filter_languages):
     # get clone_urls of the repos that should be downloaded
     urls = []
     languages = []
+    total_count_exceeded = False
     json_array = js.loads(response.text)
 
-    if not filter_languages:
+    print("----------------------------------------------------")
+    print(json_array)
 
+
+    if json_array["items"] == []:
+        total_count_exceeded = True
+        return urls, languages, total_count_exceeded
+
+    if not filter_languages:
         for json in json_array["items"]:
             urls.append(json["clone_url"])
             languages.append(json["language"])
     else:
         for json in json_array["items"]:
-            if(json["language"] in supported_language_strings):
+            if json["language"] in supported_language_strings:
                 urls.append(json["clone_url"])
                 languages.append(json["language"])
-
-    #create a job with the given reponse directly after finishing, so nodes can start
-    # doesn't matter if not the same length, cause nodes will take the next job when they are done
-    return urls, languages
-
+    return urls, languages, total_count_exceeded
 
 
 def getRepIdsFromItems(response):
@@ -338,14 +399,14 @@ def processRepoIds(rep_ids):
     languages = []
 
     for repo in rep_ids:
+        time.sleep(1.5) # total time approximated: 37 minutes
         response = getResponseForUrl(f"https://api.github.com/repositories/{ repo }")
 
         json_resp = js.loads(response.text)
-        if(json_resp["language"] in supported_language_strings):
+        if json_resp["language"] in supported_language_strings:
             urls.append(json_resp["clone_url"])
             languages.append(json_resp["language"])
 
-    
     return urls, languages
 
 
@@ -370,7 +431,7 @@ def processRepoUrls(repo_urls):
         response = getResponseForUrl(f"{ repo }")  # TODO: check repo url if secure
 
         json_resp = js.loads(response.text)
-        if(json_resp["language"] in supported_language_strings):
+        if json_resp["language"] in supported_language_strings:
             urls.append(json_resp["clone_url"])
             languages.append(json_resp["language"])
 
@@ -390,6 +451,7 @@ def responseMeetsCriteria(response, total_amount):
           by the parameter total_amount
     """
     json_resp = js.loads(response.text)
+    print(json_resp)
     total_count = json_resp["total_count"]
 
     return total_count >= total_amount
@@ -397,30 +459,37 @@ def responseMeetsCriteria(response, total_amount):
 
 # method to create jobs from given restriction with clone urls
 # TODO: decide how many clone urls a job should include (e.g. 10 to download and analyze)
-def createJobForUrls(clone_urls, languages, hashes = []):
+def createJobForUrls(clone_urls, languages, hashes=[]):
     all_data = []
     global global_counter
 
     if hashes:
         for i in range(len(clone_urls)):
-            all_data.append({"clone_urls": clone_urls[i], "language": languages[i], "hash": hashes[i]})
+            all_data.append(
+                {
+                    "clone_urls": clone_urls[i],
+                    "language": languages[i],
+                    "hash": hashes[i],
+                }
+            )
 
     else:
         for i in range(len(clone_urls)):
-            all_data.append({"clone_urls": clone_urls[i], "language": languages[i], "hash": ""})
+            all_data.append(
+                {"clone_urls": clone_urls[i], "language": languages[i], "hash": ""}
+            )
 
-    with open(filename +  str(global_counter) + ".json", "w") as write_file:
+    with open(filename + str(global_counter) + ".json", "w") as write_file:
         js.dump(all_data, write_file, indent=4)
-        global_counter +=1
+        global_counter += 1
     write_file.close()
 
 
 # TODO: move to analzyer.py
 def readUrlsFromJson():
-
     global global_counter
 
-    with open(filename + str(global_counter -1) + ".json", "r") as read_file:
+    with open(filename + str(global_counter - 1) + ".json", "r") as read_file:
         data = js.load(read_file)
 
     clone_urls = []
@@ -430,7 +499,7 @@ def readUrlsFromJson():
     for item in data:
         clone_urls.append(item["clone_urls"])
         languages.append(item["language"])
-        print(item["hash"] == "") # clone only most recent commit
+        # print(item["hash"] == "")  # clone only most recent commit
         hashes.append(item["hash"])
         read_file.close()
 
@@ -439,14 +508,13 @@ def readUrlsFromJson():
     print(hashes)
 
 
-
 getUrlsToDownloadForCode("", "", "")
 readUrlsFromJson()
-getUrlsAndCommitHashToDownloadForCode("")
-readUrlsFromJson()
-getUrlsToDownloadForCommits("")
-readUrlsFromJson()
-getUrlsToDownloadForIssues("", "", "", "")
-readUrlsFromJson()
-getUrlsToDownloadForRep("", "")
-readUrlsFromJson()
+# getUrlsAndCommitHashToDownloadForCode("")
+# readUrlsFromJson()
+# getUrlsToDownloadForCommits("")
+# readUrlsFromJson()
+# getUrlsToDownloadForIssues("", "", "", "")
+# readUrlsFromJson()
+# getUrlsToDownloadForRep("", "")
+# readUrlsFromJson()
