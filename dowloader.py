@@ -108,7 +108,9 @@ def getUrlsAndCommitHashToDownloadForCode(keyword, sort_by="", order=""): # code
             f"&per_page=25&page={i}"
         )
         code_response = getResponseForUrl(url)
-        repo_ids = getRepIdsFromItems(code_response)
+        repo_ids, total_count_exceeded = getRepIdsFromItems(code_response)
+        if total_count_exceeded: #no more results
+            break
         clone_urls_complete, languages = processRepoIds(repo_ids)
         commit_hashes = getCommitShaFromItems(code_response)
         createJobForUrls(
@@ -149,7 +151,9 @@ def getUrlsToDownloadForCode(keyword, label="", total_amount=0, sort_by="", orde
             f"&per_page=25&page={i}"
         )
         code_response = getResponseForUrl(url)
-        repo_ids = getRepIdsFromItems(code_response)
+        repo_ids, total_count_exceeded = getRepIdsFromItems(code_response)
+        if total_count_exceeded: #no more results
+            break
         rep_ids_unique = list(
             set(repo_ids)
         )  # no duplicate ids for efficiency write in Methodik
@@ -190,7 +194,9 @@ def getUrlsToDownloadForCommits(keyword, sort_by="", order=""): # commits
             f"&per_page=25&page={i}"
         )
         commit_response = getResponseForUrl(url)
-        repo_ids = getRepIdsFromItems(commit_response)
+        repo_ids, total_count_exceeded = getRepIdsFromItems(commit_response)
+        if total_count_exceeded: #no more results
+            break
         clone_urls, languages = processRepoIds(repo_ids)
         commit_hashes = getCommitShaFromItems(commit_response)
         createJobForUrls(
@@ -232,7 +238,9 @@ def getUrlsToDownloadForIssues(
             f"&sort={sort_by}&order={order}&per_page=30&page={i}"
         )
         issues_response = getResponseForUrl(url)
-        repo_urls = getRepoUrlsFromItems(issues_response)
+        repo_urls,total_count_exceeded = getRepoUrlsFromItems(issues_response)
+        if total_count_exceeded: #no more results
+            break
         repo_urls_unique = list(set(repo_urls))
         clone_urls, languages = processRepoUrls(repo_urls_unique)
         createJobForUrls(clone_urls=clone_urls, languages=languages)
@@ -337,12 +345,17 @@ def getRepIdsFromItems(response):
         List[int]: list of repository ids (can be duplicate in list)
     """
     rep_ids = []
+    total_count_exceeded = False
     json_array = js.loads(response.text)
+
+    if json_array["items"] == []:
+        total_count_exceeded = True
+        return rep_ids, total_count_exceeded
 
     for json in json_array["items"]:
         rep_ids.append(json["repository"]["id"])
 
-    return rep_ids
+    return rep_ids, total_count_exceeded
 
 
 def getCommitShaFromItems(response):
@@ -377,6 +390,10 @@ def getRepoUrlsFromItems(response):
     repo_urls = []
     json_array = js.loads(response.text)
 
+    if json_array["items"] == []: # for this specific page nor more items break loop, no more pages necessary
+        total_count_exceeded = True
+        return repo_urls, total_count_exceeded
+
     for json in json_array["items"]:
         repo_urls.append(json["repository_url"])
 
@@ -400,6 +417,7 @@ def processRepoIds(rep_ids):
 
     for repo in rep_ids:
         time.sleep(1.5) # total time approximated: 37 minutes
+        print(f"REPO: {repo}")
         response = getResponseForUrl(f"https://api.github.com/repositories/{ repo }")
 
         json_resp = js.loads(response.text)
@@ -499,7 +517,6 @@ def readUrlsFromJson():
     for item in data:
         clone_urls.append(item["clone_urls"])
         languages.append(item["language"])
-        # print(item["hash"] == "")  # clone only most recent commit
         hashes.append(item["hash"])
         read_file.close()
 
