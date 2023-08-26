@@ -224,18 +224,18 @@ def getUrlsToDownloadForIssues(
         (options include: asc and desc)
     """
 
-    keyword = "Zero Day"
+    keyword = "Zero Day is cool"
     state = "closed"
-    created_from = "2010-01-01"
+    created_from = "2020-01-01"
     created_till = "2020-12-31"
     sort_by = "stars"
     order = "desc"
 
     # pagination
-    for i in range(34):
+    for i in range(40):
         url = (
             f"https://api.github.com/search/issues?q={keyword}+is:issue+state:{state}+created:{created_from}..{created_till}"
-            f"&sort={sort_by}&order={order}&per_page=30&page={i}"
+            f"&sort={sort_by}&order={order}&per_page=25&page={i}"
         )
         issues_response = getResponseForUrl(url)
         repo_urls,total_count_exceeded = getRepoUrlsFromItems(issues_response)
@@ -314,9 +314,6 @@ def processResponseForRep(response, filter_languages):
     total_count_exceeded = False
     json_array = js.loads(response.text)
 
-    print("----------------------------------------------------")
-    print(json_array)
-
 
     if json_array["items"] == []:
         total_count_exceeded = True
@@ -388,6 +385,7 @@ def getRepoUrlsFromItems(response):
         (List[str]): list of repository URLs included in the reponse  (can be duplicate in list)
     """
     repo_urls = []
+    total_count_exceeded = False
     json_array = js.loads(response.text)
 
     if json_array["items"] == []: # for this specific page nor more items break loop, no more pages necessary
@@ -397,7 +395,7 @@ def getRepoUrlsFromItems(response):
     for json in json_array["items"]:
         repo_urls.append(json["repository_url"])
 
-    return repo_urls
+    return repo_urls, total_count_exceeded
 
 
 def processRepoIds(rep_ids):
@@ -417,7 +415,6 @@ def processRepoIds(rep_ids):
 
     for repo in rep_ids:
         time.sleep(1.5) # total time approximated: 37 minutes
-        print(f"REPO: {repo}")
         response = getResponseForUrl(f"https://api.github.com/repositories/{ repo }")
 
         json_resp = js.loads(response.text)
@@ -469,7 +466,6 @@ def responseMeetsCriteria(response, total_amount):
           by the parameter total_amount
     """
     json_resp = js.loads(response.text)
-    print(json_resp)
     total_count = json_resp["total_count"]
 
     return total_count >= total_amount
@@ -520,13 +516,9 @@ def readUrlsFromJson():
         hashes.append(item["hash"])
         read_file.close()
 
-    print(clone_urls)
-    print(languages)
-    print(hashes)
 
-
-getUrlsToDownloadForCode("", "", "")
-readUrlsFromJson()
+# getUrlsToDownloadForCode("", "", "")
+# readUrlsFromJson()
 # getUrlsAndCommitHashToDownloadForCode("")
 # readUrlsFromJson()
 # getUrlsToDownloadForCommits("")
