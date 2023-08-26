@@ -1,5 +1,5 @@
 filename = "my_file"
-OUTPUTPATH = "output_file"
+OUTPUTPATH = "output_w_hash_file"
 import json as js
 from git import Repo
 
@@ -33,12 +33,13 @@ def cloneAndAnalayze(clone_command, language, filepath):
     analyze(filepath)
 
 def cloneWithHash(clone_url, commit_hash, output_path ):
-    # Clone the repository
+# Clone the repository
     repo = Repo.init(output_path)
     origin = repo.create_remote('origin', clone_url)
     origin.fetch()
 
     # Checkout the specific commit
+    # bytes_hash = commit_hash.encode('utf-8')
     commit = repo.commit(commit_hash)
     repo.git.checkout(commit)
 
@@ -57,3 +58,5 @@ def createJobForResults(results, language):
 
 def deleteOutput(output_path):
     pass
+
+readUrlsFromJson()

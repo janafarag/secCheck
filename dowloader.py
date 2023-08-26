@@ -108,13 +108,19 @@ def getUrlsAndCommitHashToDownloadForCode(keyword, sort_by="", order=""): # code
             f"&per_page=25&page={i}"
         )
         code_response = getResponseForUrl(url)
-        repo_ids, total_count_exceeded = getRepIdsFromItems(code_response)
+        repo_ids,commit_hashes, total_count_exceeded = getRepIdsFromItems(code_response)
         if total_count_exceeded: #no more results
             break
         clone_urls_complete, languages = processRepoIds(repo_ids)
-        commit_hashes = getCommitShaFromItems(code_response)
+        #filter commit hashes according to clone_urls to keep order
+        for index in range(0, len(clone_urls_complete)):
+            if clone_urls_complete[index] == "":
+                commit_hashes[index] = ""
+        #delete after to not mess with index
+        filtered_clone_urls = [item for item in clone_urls_complete if item != ""] 
+        filtered_commit_hashes = [item for item in commit_hashes if item != ""]
         createJobForUrls(
-            clone_urls=clone_urls_complete, languages=languages, hashes=commit_hashes
+            clone_urls=filtered_clone_urls, languages=languages, hashes=filtered_commit_hashes
         )
 
 
@@ -151,7 +157,7 @@ def getUrlsToDownloadForCode(keyword, label="", total_amount=0, sort_by="", orde
             f"&per_page=25&page={i}"
         )
         code_response = getResponseForUrl(url)
-        repo_ids, total_count_exceeded = getRepIdsFromItems(code_response)
+        repo_ids, commit_hashes, total_count_exceeded = getRepIdsFromItems(code_response)
         if total_count_exceeded: #no more results
             break
         rep_ids_unique = list(
@@ -165,7 +171,7 @@ def getUrlsToDownloadForCode(keyword, label="", total_amount=0, sort_by="", orde
             )
             repo_ids = limited_repos
 
-        clone_urls_limited_and_unique, languages = processRepoIds(repo_ids)
+        clone_urls_limited_and_unique, languages = processRepoIds(repo_ids) #no filtering necessary, hash unimportant
         createJobForUrls(clone_urls=clone_urls_limited_and_unique, languages=languages)
 
 
@@ -194,13 +200,19 @@ def getUrlsToDownloadForCommits(keyword, sort_by="", order=""): # commits
             f"&per_page=25&page={i}"
         )
         commit_response = getResponseForUrl(url)
-        repo_ids, total_count_exceeded = getRepIdsFromItems(commit_response)
+        repo_ids, commit_hashes, total_count_exceeded = getRepIdsFromItems(commit_response)
         if total_count_exceeded: #no more results
             break
         clone_urls, languages = processRepoIds(repo_ids)
-        commit_hashes = getCommitShaFromItems(commit_response)
+        #filter commit hashes according to clone_urls to keep order
+        for index in range(0, len(clone_urls)):
+            if clone_urls[index] == "":
+                commit_hashes[index] = ""
+        #delete after to not mess with index
+        filtered_clone_urls = [item for item in clone_urls if item != ""]
+        filtered_commit_hashes = [item for item in commit_hashes if item != ""]
         createJobForUrls(
-            clone_urls=clone_urls, languages=languages, hashes=commit_hashes
+            clone_urls=filtered_clone_urls, languages=languages, hashes=filtered_commit_hashes
         )
 
 
@@ -224,9 +236,9 @@ def getUrlsToDownloadForIssues(
         (options include: asc and desc)
     """
 
-    keyword = "Zero Day is cool"
-    state = "closed"
-    created_from = "2020-01-01"
+    keyword = "Zero Day"
+    state = "open"
+    created_from = "2010-01-01"
     created_till = "2020-12-31"
     sort_by = "stars"
     order = "desc"
@@ -340,38 +352,23 @@ def getRepIdsFromItems(response):
 
     Returns:
         List[int]: list of repository ids (can be duplicate in list)
+        (List[str]): commit hashes (sha field)
     """
     rep_ids = []
+    commit_hashes = []
     total_count_exceeded = False
     json_array = js.loads(response.text)
 
     if json_array["items"] == []:
         total_count_exceeded = True
-        return rep_ids, total_count_exceeded
+        return rep_ids,commit_hashes,total_count_exceeded
 
     for json in json_array["items"]:
         rep_ids.append(json["repository"]["id"])
-
-    return rep_ids, total_count_exceeded
-
-
-def getCommitShaFromItems(response):
-    """_return commit hashes (sha) from the response
-    (for code search and commit search response structures)_
-
-    Args:
-        response(requests.Response) : reponse to an API call
-
-    Returns:
-        (List[str]): commit hashes (sha field)
-    """
-    commit_hashes = []
-    json_array = js.loads(response.text)
-
-    for json in json_array["items"]:
         commit_hashes.append(json["sha"])
 
-    return commit_hashes
+    return rep_ids,commit_hashes, total_count_exceeded
+
 
 
 def getRepoUrlsFromItems(response):
@@ -421,6 +418,9 @@ def processRepoIds(rep_ids):
         if json_resp["language"] in supported_language_strings:
             urls.append(json_resp["clone_url"])
             languages.append(json_resp["language"])
+        else:
+            urls.append("") #to filter commit hashes by
+            # leave languages unchanged and filter urls after
 
     return urls, languages
 
@@ -519,8 +519,8 @@ def readUrlsFromJson():
 
 # getUrlsToDownloadForCode("", "", "")
 # readUrlsFromJson()
-# getUrlsAndCommitHashToDownloadForCode("")
-# readUrlsFromJson()
+getUrlsAndCommitHashToDownloadForCode("")
+readUrlsFromJson()
 # getUrlsToDownloadForCommits("")
 # readUrlsFromJson()
 # getUrlsToDownloadForIssues("", "", "", "")
