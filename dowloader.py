@@ -85,45 +85,6 @@ def getUrlsToDownloadForRep(
         createJobForUrls(clone_urls, languages)
 
 
-def getUrlsAndCommitHashToDownloadForCode(keyword, sort_by="", order=""): # code_specific
-    """_get clone urls with the unique hash codes for a specific commit in the repository
-    filtering the code of all commits of all repositories by a specific keyword.
-    purpose: analyying specific commits based on behavior while coding_
-    Jobs in JSON format with the necessary infromation for analysis are created (clone urls and language and commit hashes)
-
-    Args:
-        keyword (str): keyword that should be filtered by in the complete code
-        filtering all commits for every repository.
-        sort_by (str, optional): property to be sorted by. Defaults to "".
-        (options include: forks, stars)
-        order (str, optional): order to be sorted with. Defaults to "".
-        (options include: asc and desc)
-    """
-    keyword = "bug"
-
-    # pagination
-    for i in range(40):
-        url = (
-            f"https://api.github.com/search/code?q={keyword}&sort={sort_by}&order={order}"
-            f"&per_page=25&page={i}"
-        )
-        code_response = getResponseForUrl(url)
-        repo_ids,commit_hashes, total_count_exceeded = getRepIdsFromItems(code_response)
-        if total_count_exceeded: #no more results
-            break
-        clone_urls_complete, languages = processRepoIds(repo_ids)
-        #filter commit hashes according to clone_urls to keep order
-        for index in range(0, len(clone_urls_complete)):
-            if clone_urls_complete[index] == "":
-                commit_hashes[index] = ""
-        #delete after to not mess with index
-        filtered_clone_urls = [item for item in clone_urls_complete if item != ""] 
-        filtered_commit_hashes = [item for item in commit_hashes if item != ""]
-        createJobForUrls(
-            clone_urls=filtered_clone_urls, languages=languages, hashes=filtered_commit_hashes
-        )
-
-
 def getUrlsToDownloadForCode(keyword, label="", total_amount=0, sort_by="", order=""): # code_general
     """_get clone urls of repositories
     filtering the code of all commits of all repositories by a specific keyword
@@ -519,8 +480,6 @@ def readUrlsFromJson():
 
 # getUrlsToDownloadForCode("", "", "")
 # readUrlsFromJson()
-getUrlsAndCommitHashToDownloadForCode("")
-readUrlsFromJson()
 # getUrlsToDownloadForCommits("")
 # readUrlsFromJson()
 # getUrlsToDownloadForIssues("", "", "", "")

@@ -9,12 +9,6 @@
         "order": "desc"
     },
     {
-        "api": "code_specific",
-        "keyword": "react",
-        "sort_by": "stars",
-        "order": "desc"
-    },
-    {
         "api": "code_general",
         "keyword": "bug",
         "limit_by_label_enabled": "True",
