@@ -1,6 +1,9 @@
 filename = "my_file"
-OUTPUTPATH = "output_w_hash_file"
+OUTPUTPATH = "output_file"
+# OUTPUTPATH = "output_w_hash_file"
+DEPENDENCY_CHECK_OUTPUT = 'dependency_output/'
 import json as js
+import subprocess
 from git import Repo
 
 def readUrlsFromJson():
@@ -12,25 +15,29 @@ def readUrlsFromJson():
     clone_url = language = hash = clone_command = ""
     counter = 0
 
-    for item in data:
-        counter +=1
-        clone_url = item["clone_urls"]
-        language = item["language"]
-        if item["hash"] == "":  # clone only most recent commit
-            cloneMostRecent(clone_url, OUTPUTPATH + str(counter))
-        else:
-            hash = item["hash"]
-            cloneWithHash(clone_url, hash, OUTPUTPATH + str(counter))
+    #execute once:
+    # Create a directory
+    # subprocess.run(['mkdir', 'dependency_output'])
 
-        results = analyze(OUTPUTPATH + str(counter)) # analyze one an then delete it, better for memory
+    # for item in data:
+    for index in range(0,6):
+        counter +=1
+        # clone_url = item["clone_urls"]
+        # language = item["language"]
+        # if item["hash"] == "":  # clone only most recent commit
+        #     cloneMostRecent(clone_url, OUTPUTPATH + str(counter))
+        # else:
+        #     hash = item["hash"]
+        #     cloneWithHash(clone_url, hash, OUTPUTPATH + str(counter))
+
+        results = analyze(OUTPUTPATH + str(counter), DEPENDENCY_CHECK_OUTPUT + str(counter)) # analyze one an then delete it, better for memory
         createJobForResults(results, language) # better for traffic in RabbitMQ
         deleteOutput(OUTPUTPATH + str(counter))
     read_file.close()
 
 
 def cloneAndAnalayze(clone_command, language, filepath):
-    cloneWithHash(clone_command)
-    analyze(filepath)
+    pass
 
 def cloneWithHash(clone_url, commit_hash, output_path ):
 # Clone the repository
@@ -49,8 +56,12 @@ def cloneMostRecent(clone_url, output_path ):
     # Checkout the HEAD commit
     repo.git.checkout('HEAD')
 
-def analyze(filepath):
-    pass
+def analyze(filepath, output_path):
+    #shell faster than bash, CLI faster than maven or gradle cause subprocess
+    # creates a process inside parent without invoking a new shell
+    print(filepath, output_path)
+    subprocess.run([ 'dependency-check.sh','--scan', str(filepath), '--format',
+                     'JSON', '--prettyPrint', '--out', output_path ])
 
 def createJobForResults(results, language):
     pass
