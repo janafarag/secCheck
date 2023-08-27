@@ -433,7 +433,7 @@ def responseMeetsCriteria(response, total_amount):
 
 
 # method to create jobs from given restriction with clone urls
-# TODO: decide how many clone urls a job should include (e.g. 10 to download and analyze)
+# TODO: implement with RabbitMQ
 def createJobForUrls(clone_urls, languages, hashes=[]):
     all_data = []
     global global_counter
@@ -460,29 +460,8 @@ def createJobForUrls(clone_urls, languages, hashes=[]):
     write_file.close()
 
 
-# TODO: move to analzyer.py
-def readUrlsFromJson():
-    global global_counter
-
-    with open(filename + str(global_counter - 1) + ".json", "r") as read_file:
-        data = js.load(read_file)
-
-    clone_urls = []
-    languages = []
-    hashes = []
-
-    for item in data:
-        clone_urls.append(item["clone_urls"])
-        languages.append(item["language"])
-        hashes.append(item["hash"])
-        read_file.close()
-
 
 # getUrlsToDownloadForCode("", "", "")
-# readUrlsFromJson()
 getUrlsToDownloadForCommits("")
-readUrlsFromJson()
 # getUrlsToDownloadForIssues("", "", "", "")
-# readUrlsFromJson()
 # getUrlsToDownloadForRep("", "")
-# readUrlsFromJson()

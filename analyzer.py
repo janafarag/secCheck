@@ -5,8 +5,12 @@ import json as js
 import subprocess
 from git import Repo
 
+
+def pollForJobs():
+    #TODO: implement with RabbitMQ
+    pass
+
 def readUrlsFromJson():
-    global global_counter
 
     with open(filename + str(1) + ".json", "r") as read_file: # test with first file containing 25 repos
         data = js.load(read_file)
@@ -15,6 +19,7 @@ def readUrlsFromJson():
     counter = 0
 
     # for item in data (max 25 items):
+    # cloning and analyzing takes approx 3 minutes for 10 items/repositories
     for item in data:
         counter +=1
         clone_url = item["clone_urls"]
@@ -50,8 +55,7 @@ def cloneMostRecent(clone_url, output_path ):
     repo.git.checkout('HEAD')
 
 def analyze(filepath, output_path):
-    #shell faster than bash, CLI faster than maven or gradle cause subprocess
-    # creates a process inside parent without invoking a new shell
+    # TODO: look for command line arguments to only output important and relevant data
     print(filepath, output_path)
     subprocess.run([ 'dependency-check.sh','--scan', str(filepath), '--format',
                      'JSON', '--prettyPrint', '--out', output_path ])
