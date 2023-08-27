@@ -1,7 +1,6 @@
 filename = "my_file"
-OUTPUTPATH = "output_file"
-# OUTPUTPATH = "output_w_hash_file"
-DEPENDENCY_CHECK_OUTPUT = 'dependency_output/'
+CLONE_OUTPUTPATH = "clone_output/"
+DEPENDENCY_CHECK_OUTPUT = 'dependency_check_output/'
 import json as js
 import subprocess
 from git import Repo
@@ -9,38 +8,32 @@ from git import Repo
 def readUrlsFromJson():
     global global_counter
 
-    with open(filename + str(1) + ".json", "r") as read_file: # test with first file
+    with open(filename + str(1) + ".json", "r") as read_file: # test with first file containing 25 repos
         data = js.load(read_file)
 
-    clone_url = language = hash = clone_command = ""
+    clone_url = language = hash = ""
     counter = 0
 
-    #execute once:
-    # Create a directory
-    # subprocess.run(['mkdir', 'dependency_output'])
-
-    # for item in data:
-    for index in range(0,6):
+    # for item in data (max 25 items):
+    for item in data:
         counter +=1
-        # clone_url = item["clone_urls"]
-        # language = item["language"]
-        # if item["hash"] == "":  # clone only most recent commit
-        #     cloneMostRecent(clone_url, OUTPUTPATH + str(counter))
-        # else:
-        #     hash = item["hash"]
-        #     cloneWithHash(clone_url, hash, OUTPUTPATH + str(counter))
+        clone_url = item["clone_urls"]
+        language = item["language"]
+        if item["hash"] == "":  # clone only most recent commit
+            cloneMostRecent(clone_url, CLONE_OUTPUTPATH + str(counter))
+        else:
+            hash = item["hash"]
+            cloneWithHash(clone_url, hash, CLONE_OUTPUTPATH + str(counter))
 
-        results = analyze(OUTPUTPATH + str(counter), DEPENDENCY_CHECK_OUTPUT + str(counter)) # analyze one an then delete it, better for memory
-        createJobForResults(results, language) # better for traffic in RabbitMQ
-        deleteOutput(OUTPUTPATH + str(counter))
+        analyze(CLONE_OUTPUTPATH + str(counter), DEPENDENCY_CHECK_OUTPUT + str(counter)) # analyze one an then delete it, better for memory
+        createJobForResults(DEPENDENCY_CHECK_OUTPUT + str(counter), language) # better for traffic in RabbitMQ
+        deleteOutput(CLONE_OUTPUTPATH + str(counter), DEPENDENCY_CHECK_OUTPUT + str(counter))
     read_file.close()
 
 
-def cloneAndAnalayze(clone_command, language, filepath):
-    pass
 
 def cloneWithHash(clone_url, commit_hash, output_path ):
-# Clone the repository
+    # Clone the repository
     repo = Repo.init(output_path)
     origin = repo.create_remote('origin', clone_url)
     origin.fetch()
@@ -63,10 +56,14 @@ def analyze(filepath, output_path):
     subprocess.run([ 'dependency-check.sh','--scan', str(filepath), '--format',
                      'JSON', '--prettyPrint', '--out', output_path ])
 
-def createJobForResults(results, language):
+def createJobForResults(path_to_results, language): #results already in JSON format
+    #TODO: create a RabbitMQ job and add language to the results
+    # add language to JSON
+    print(f"print job for PATH: {path_to_results} and LANGUAGE: {language}")
     pass
 
-def deleteOutput(output_path):
+def deleteOutput(clone_output, dependency_check_output):
+    #TODO: delte both 
     pass
 
 readUrlsFromJson()
