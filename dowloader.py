@@ -480,8 +480,8 @@ def readUrlsFromJson():
 
 # getUrlsToDownloadForCode("", "", "")
 # readUrlsFromJson()
-# getUrlsToDownloadForCommits("")
-# readUrlsFromJson()
+getUrlsToDownloadForCommits("")
+readUrlsFromJson()
 # getUrlsToDownloadForIssues("", "", "", "")
 # readUrlsFromJson()
 # getUrlsToDownloadForRep("", "")

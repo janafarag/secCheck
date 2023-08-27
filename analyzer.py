@@ -39,7 +39,6 @@ def cloneWithHash(clone_url, commit_hash, output_path ):
     origin.fetch()
 
     # Checkout the specific commit
-    # bytes_hash = commit_hash.encode('utf-8')
     commit = repo.commit(commit_hash)
     repo.git.checkout(commit)
 
