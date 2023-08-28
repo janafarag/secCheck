@@ -58,7 +58,8 @@ def analyze(filepath, output_path):
     # TODO: look for command line arguments to only output important and relevant data
     print(filepath, output_path)
     subprocess.run([ 'dependency-check.sh','--scan', str(filepath), '--format',
-                     'JSON', '--prettyPrint', '--out', output_path ])
+                     'JSON', '--prettyPrint', '--out', output_path, 
+                      '--enableExperimental', '--disableRubygems' ])
 
 def createJobForResults(path_to_results, language): #results already in JSON format
     #TODO: create a RabbitMQ job and add language to the results
