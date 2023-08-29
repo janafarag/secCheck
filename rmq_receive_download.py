@@ -30,10 +30,6 @@ def main():
 def fwdJobToDownloader(body):
     json_array = js.loads(body)
     api = json_array["data"] ["api"]
-    print(api)
-    print(json_array)
-    print(json_array["data"])
-    print(json_array["data"] ["api"])
 
     if api == "repo":
         print('repo')

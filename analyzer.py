@@ -1,14 +1,18 @@
 filename = "my_file"
-CLONE_OUTPUTPATH = "clone_output/"
-DEPENDENCY_CHECK_OUTPUT = 'dependency_check_output/'
+CLONE_OUTPUTPATH = "clone_output"
+DEPENDENCY_CHECK_OUTPUT = 'dependency_check_output'
 import json as js
 import subprocess
 from git import Repo
 import rmq_sender
+import os, shutil
 
 
 
 def readUrlsFromJson(json_body):
+
+    # create directory
+    os.mkdir(DEPENDENCY_CHECK_OUTPUT)
 
     body = js.loads(json_body)
     clone_url = language = hash = ""
@@ -18,18 +22,21 @@ def readUrlsFromJson(json_body):
     # cloning and analyzing takes approx 3 minutes for 10 items/repositories
     for item in body:
         print(f"{item}")
-        counter +=1
         clone_url = item["clone_url"]
         language = item["language"]
         if item["hash"] == "":  # clone only most recent commit
-            cloneMostRecent(clone_url, CLONE_OUTPUTPATH + str(counter))
+            cloneMostRecent(clone_url, CLONE_OUTPUTPATH)
         else:
             hash = item["hash"]
-            cloneWithHash(clone_url, hash, CLONE_OUTPUTPATH + str(counter))
+            cloneWithHash(clone_url, hash, CLONE_OUTPUTPATH)
 
-        analyze(CLONE_OUTPUTPATH + str(counter), DEPENDENCY_CHECK_OUTPUT + str(counter)) # analyze one an then delete it, better for memory
-        createJobForResults(DEPENDENCY_CHECK_OUTPUT + str(counter), language) # better for traffic in RabbitMQ
-        deleteOutput(CLONE_OUTPUTPATH + str(counter), DEPENDENCY_CHECK_OUTPUT + str(counter))
+        analyze(CLONE_OUTPUTPATH , DEPENDENCY_CHECK_OUTPUT) # analyze one an then delete it, better for memory
+        createJobForResults(DEPENDENCY_CHECK_OUTPUT + "/dependency-check-report.json", language) # better for traffic in RabbitMQ
+        # delete output every time
+        deleteOutput(CLONE_OUTPUTPATH, DEPENDENCY_CHECK_OUTPUT + "/dependency-check-report.json")
+
+    #delete directory when finished
+    shutil.rmtree(DEPENDENCY_CHECK_OUTPUT)
 
 
 
@@ -61,7 +68,7 @@ def createJobForResults(path_to_results, language): #results already in JSON for
     # add language to JSON
     print(f"print job for PATH: {path_to_results} and LANGUAGE: {language}")
     # Open the JSON file and read its contents
-    with open(path_to_results + "/dependency-check-report.json", 'r') as f:
+    with open(path_to_results, 'r') as f:
         json_data = f.read()
 
     json_array = js.loads(json_data)
@@ -74,5 +81,6 @@ def createJobForResults(path_to_results, language): #results already in JSON for
     f.close()
 
 def deleteOutput(clone_output, dependency_check_output):
-    #TODO: delte both 
-    pass
+    shutil.rmtree(clone_output)
+    os.remove(dependency_check_output)
+
