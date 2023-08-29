@@ -61,14 +61,13 @@ def createJobForResults(path_to_results, language): #results already in JSON for
     # add language to JSON
     print(f"print job for PATH: {path_to_results} and LANGUAGE: {language}")
     # Open the JSON file and read its contents
-    # with open(path_to_results, 'r') as f:
-    #     json_data = f.read()
+    with open(path_to_results + "/dependency-check-report.json", 'r') as f:
+        json_data = f.read()
 
-    # # Load the JSON data into a Python dictionary
-    # body = js.loads(json_data)
-    # print(body)
-    # rmq_sender.send_results(body)
-    # f.close()
+    # Load the JSON data into a Python dictionary
+    print(json_data)
+    rmq_sender.send_results(json_data)
+    f.close()
 
 def deleteOutput(clone_output, dependency_check_output):
     #TODO: delte both 

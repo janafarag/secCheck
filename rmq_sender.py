@@ -26,7 +26,7 @@ def send_results(body):
     channel.queue_declare(queue="DependencyCheckQueue")
 
     channel.basic_publish(exchange="", routing_key="DependencyCheckQueue", body=body)
-    print(" [x] Sent 'Hello World!'")
+    print(" [x] Sent resultsss!")
     connection.close()
 
 
