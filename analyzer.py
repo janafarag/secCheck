@@ -64,6 +64,10 @@ def createJobForResults(path_to_results, language): #results already in JSON for
     with open(path_to_results + "/dependency-check-report.json", 'r') as f:
         json_data = f.read()
 
+    json_array = js.loads(json_data)
+    json_array['language'] = language
+    json_data = js.dumps(json_array)
+
     # Load the JSON data into a Python dictionary
     print(json_data)
     rmq_sender.send_results(json_data)
