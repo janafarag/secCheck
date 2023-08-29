@@ -4,6 +4,7 @@ from pip._vendor import requests
 from secrets_1 import access_token
 import json as js
 import time
+import rmq_sender
 
 filename = "my_file"
 global_counter = 1
@@ -59,12 +60,6 @@ def getUrlsToDownloadForRep(
         order (str, optional): order to be sorted with. Defaults to "".
         (options include: asc and desc)
     """
-    keyword = "react"
-    language = "js"
-    created_from = "2020-12-30"
-    created_till = "2020-12-31"
-    sort_by = "stars"
-    order = "desc"
     filter_languages = False
     if language == "":  # if not language selected filter for only supported languages
         filter_languages = True
@@ -462,6 +457,6 @@ def createJobForUrls(clone_urls, languages, hashes=[]):
 
 
 # getUrlsToDownloadForCode("", "", "")
-getUrlsToDownloadForCommits("")
+# getUrlsToDownloadForCommits("")
 # getUrlsToDownloadForIssues("", "", "", "")
 # getUrlsToDownloadForRep("", "")

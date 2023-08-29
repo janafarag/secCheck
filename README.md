@@ -27,3 +27,15 @@ https://jeremylong.github.io/DependencyCheck/dependency-check-cli/index.html
 (replace /path/to/dependency-check/bin with location to the bin folder of the extracted dependency check zip file)
 
 `export PATH=$PATH:/path/to/dependency-check/bin`
+
+7. Install and run RabbitMQ on localhost:
+
+`docker run -d --hostname rmq --name rabbit-server -p 8080:15672 -p 5672:5672 rabbitmq:3-management`
+
+7. install Pika for RabbitMQ
+
+`python3 -m pip install pika --upgrade`
+
+To activate virtual env:
+
+`source .venv/bin/activate`
