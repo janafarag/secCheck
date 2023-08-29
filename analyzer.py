@@ -4,25 +4,22 @@ DEPENDENCY_CHECK_OUTPUT = 'dependency_check_output/'
 import json as js
 import subprocess
 from git import Repo
+import rmq_sender
 
 
-def pollForJobs():
-    #TODO: implement with RabbitMQ
-    pass
 
-def readUrlsFromJson():
+def readUrlsFromJson(json_body):
 
-    with open(filename + str(1) + ".json", "r") as read_file: # test with first file containing 25 repos
-        data = js.load(read_file)
-
+    body = js.loads(json_body)
     clone_url = language = hash = ""
     counter = 0
 
     # for item in data (max 25 items):
     # cloning and analyzing takes approx 3 minutes for 10 items/repositories
-    for item in data:
+    for item in body:
+        print(f"{item}")
         counter +=1
-        clone_url = item["clone_urls"]
+        clone_url = item["clone_url"]
         language = item["language"]
         if item["hash"] == "":  # clone only most recent commit
             cloneMostRecent(clone_url, CLONE_OUTPUTPATH + str(counter))
@@ -33,7 +30,6 @@ def readUrlsFromJson():
         analyze(CLONE_OUTPUTPATH + str(counter), DEPENDENCY_CHECK_OUTPUT + str(counter)) # analyze one an then delete it, better for memory
         createJobForResults(DEPENDENCY_CHECK_OUTPUT + str(counter), language) # better for traffic in RabbitMQ
         deleteOutput(CLONE_OUTPUTPATH + str(counter), DEPENDENCY_CHECK_OUTPUT + str(counter))
-    read_file.close()
 
 
 
@@ -55,7 +51,6 @@ def cloneMostRecent(clone_url, output_path ):
     repo.git.checkout('HEAD')
 
 def analyze(filepath, output_path):
-    # TODO: look for command line arguments to only output important and relevant data
     print(filepath, output_path)
     subprocess.run([ 'dependency-check.sh','--scan', str(filepath), '--format',
                      'JSON', '--prettyPrint', '--out', output_path, 
@@ -65,10 +60,16 @@ def createJobForResults(path_to_results, language): #results already in JSON for
     #TODO: create a RabbitMQ job and add language to the results
     # add language to JSON
     print(f"print job for PATH: {path_to_results} and LANGUAGE: {language}")
-    pass
+    # Open the JSON file and read its contents
+    # with open(path_to_results, 'r') as f:
+    #     json_data = f.read()
+
+    # # Load the JSON data into a Python dictionary
+    # body = js.loads(json_data)
+    # print(body)
+    # rmq_sender.send_results(body)
+    # f.close()
 
 def deleteOutput(clone_output, dependency_check_output):
     #TODO: delte both 
     pass
-
-readUrlsFromJson()

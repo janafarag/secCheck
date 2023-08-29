@@ -3,9 +3,10 @@
 import pika, sys, os
 import json as js
 import dowloader
-
+import rmq_sender
 
 def main():
+    rmq_sender.test()
     credentials = pika.PlainCredentials("guest", "guest")
     connection = pika.BlockingConnection(
         pika.ConnectionParameters(

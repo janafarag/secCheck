@@ -33,8 +33,6 @@ supported_language_strings = [
 ]  # spelling in language field/property
 
 
-# TODO: get input from user / stop faking input
-
 
 def downloader(repo_url, local_dir):
     # Check if the file has already been cloned
@@ -102,10 +100,6 @@ def getUrlsToDownloadForCode(keyword, label="", total_amount=0, sort_by="", orde
         (options include: asc and desc)
     """
 
-    keyword = "bug"
-    sort_by = "stars"
-    order = "desc"
-
     # pagination
     for i in range(40):
         url = (
@@ -145,9 +139,6 @@ def getUrlsToDownloadForCommits(keyword, sort_by="", order=""): # commits
         order (str, optional): order to be sorted with. Defaults to "".
         (options include: asc and desc)
     """
-    keyword = "fix"
-    sort_by = "stars"
-    order = "desc"
 
     # pagination
     for i in range(40):
@@ -192,12 +183,6 @@ def getUrlsToDownloadForIssues(
         (options include: asc and desc)
     """
 
-    keyword = "Zero Day"
-    state = "open"
-    created_from = "2010-01-01"
-    created_till = "2020-12-31"
-    sort_by = "stars"
-    order = "desc"
 
     # pagination
     for i in range(40):
@@ -229,8 +214,6 @@ def limitRepoIdsWithExistingLabels(label, rep_ids, total_amount):
         List[int]: filtered list of repository ids
     """
     limited_repos = []
-    label = "bug"
-    total_amount = 1  # has at least one labeled bug
 
     for rep_id in rep_ids:
         time.sleep(1.1)
@@ -428,7 +411,6 @@ def responseMeetsCriteria(response, total_amount):
 
 
 # method to create jobs from given restriction with clone urls
-# TODO: implement with RabbitMQ
 def createJobForUrls(clone_urls, languages, hashes=[]):
     all_data = []
     global global_counter
@@ -437,7 +419,7 @@ def createJobForUrls(clone_urls, languages, hashes=[]):
         for i in range(len(clone_urls)):
             all_data.append(
                 {
-                    "clone_urls": clone_urls[i],
+                    "clone_url": clone_urls[i],
                     "language": languages[i],
                     "hash": hashes[i],
                 }
@@ -446,17 +428,12 @@ def createJobForUrls(clone_urls, languages, hashes=[]):
     else:
         for i in range(len(clone_urls)):
             all_data.append(
-                {"clone_urls": clone_urls[i], "language": languages[i], "hash": ""}
+                {"clone_url": clone_urls[i], "language": languages[i], "hash": ""}
             )
 
-    with open(filename + str(global_counter) + ".json", "w") as write_file:
-        js.dump(all_data, write_file, indent=4)
-        global_counter += 1
-    write_file.close()
+        json_body = js.dumps(all_data)
+        print(json_body)
+
+    rmq_sender.send_to_analyzer(json_body)
 
 
-
-# getUrlsToDownloadForCode("", "", "")
-# getUrlsToDownloadForCommits("")
-# getUrlsToDownloadForIssues("", "", "", "")
-# getUrlsToDownloadForRep("", "")

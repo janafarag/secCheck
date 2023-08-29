@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # reveice job from downloader to cone and alayze the given repos
-import pika, sys, os, time
+import pika, sys, os
+import analyzer
 
 def main():
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
@@ -18,7 +19,7 @@ def main():
     channel.start_consuming()
 
 def fwdJobToAnalyzer(body):
-    pass
+    analyzer.readUrlsFromJson(body)
 
 if __name__ == '__main__':
     try:

@@ -10,7 +10,7 @@ def send_to_analyzer(body):
     channel.queue_declare(queue="AnalyzerQueue")
 
     channel.basic_publish(exchange="", routing_key="AnalyzerQueue", body=body)
-    print(" [x] Sent 'Hello World!'")
+    print(" [x] Sent analyzer job!'")
     connection.close()
 
 
@@ -61,6 +61,3 @@ def test():
 
 
 
-# send_results('Hello Worldsssss xxx')
-# send_to_analyzer('Job')
-test()
