@@ -3,6 +3,8 @@
 import pika, sys, os
 import analyzer
 
+#TODO: make fail safe
+
 def main():
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
     channel = connection.channel()

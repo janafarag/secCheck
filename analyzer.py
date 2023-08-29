@@ -64,7 +64,6 @@ def analyze(filepath, output_path):
                       '--enableExperimental', '--disableRubygems' ])
 
 def createJobForResults(path_to_results, language): #results already in JSON format
-    #TODO: create a RabbitMQ job and add language to the results
     # add language to JSON
     print(f"print job for PATH: {path_to_results} and LANGUAGE: {language}")
     # Open the JSON file and read its contents
