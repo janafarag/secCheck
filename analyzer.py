@@ -17,6 +17,7 @@ def readUrlsFromJson(json_body):
     body = js.loads(json_body)
     clone_url = language = hash = ""
     counter = 0
+    success = False
 
     # for item in data (max 25 items):
     # cloning and analyzing takes approx 3 minutes for 10 items/repositories
@@ -37,6 +38,9 @@ def readUrlsFromJson(json_body):
 
     #delete directory when finished
     shutil.rmtree(DEPENDENCY_CHECK_OUTPUT)
+    success = True
+
+    return success
 
 
 
