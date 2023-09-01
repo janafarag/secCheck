@@ -1,10 +1,9 @@
-import pprint
+import rmq_sender
+from secrets_1 import access_token
 from git import repo
 from pip._vendor import requests
-from secrets_1 import access_token
 import json as js
 import time
-import rmq_sender
 
 filename = "my_file"
 global_counter = 1
@@ -412,28 +411,32 @@ def responseMeetsCriteria(response, total_amount):
 
 # method to create jobs from given restriction with clone urls
 def createJobForUrls(clone_urls, languages, hashes=[]):
-    all_data = []
+    job_data = []
     global global_counter
 
     if hashes:
         for i in range(len(clone_urls)):
-            all_data.append(
+            job_data.append(
                 {
                     "clone_url": clone_urls[i],
                     "language": languages[i],
                     "hash": hashes[i],
                 }
             )
+            #create jobs for every repo, more fail safe
+            json_body = js.dumps(job_data)
+            print(json_body)
+            rmq_sender.send_to_analyzer(json_body)
 
     else:
         for i in range(len(clone_urls)):
-            all_data.append(
+            job_data.append(
                 {"clone_url": clone_urls[i], "language": languages[i], "hash": ""}
             )
+            json_body = js.dumps(job_data)
+            print(json_body)
+            rmq_sender.send_to_analyzer(json_body)
 
-        json_body = js.dumps(all_data)
-        print(json_body)
 
-    rmq_sender.send_to_analyzer(json_body)
 
 

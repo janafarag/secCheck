@@ -7,9 +7,11 @@ def send_to_analyzer(body):
     connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
     channel = connection.channel()
 
-    channel.queue_declare(queue="AnalyzerQueue")
+    channel.queue_declare(queue="AnalyzerQueue2", durable= True)
 
-    channel.basic_publish(exchange="", routing_key="AnalyzerQueue", body=body)
+    channel.basic_publish(exchange="", routing_key="AnalyzerQueue2", body=body, properties=pika.BasicProperties(
+        delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE
+    ))
     print(" [x] Sent analyzer job!'")
     connection.close()
 

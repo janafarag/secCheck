@@ -1,16 +1,19 @@
-filename = "my_file"
-CLONE_OUTPUTPATH = "clone_output"
-DEPENDENCY_CHECK_OUTPUT = 'dependency_check_output'
+CLONE_OUTPUTPATH = "analyzer_node/clone_output"
+DEPENDENCY_CHECK_OUTPUT = 'analyzer_node/dependency_check_output'
+
 import json as js
 import subprocess
 from git import Repo
-import rmq_sender
 import os, shutil
+import rmq_sender
+
 
 
 
 def readUrlsFromJson(json_body):
 
+    #update dependency check once before running #TODO: move to Dockerfile
+    subprocess.run([ 'dependency-check.sh', '--updateonly'])
     # create directory
     os.mkdir(DEPENDENCY_CHECK_OUTPUT)
 
@@ -19,7 +22,7 @@ def readUrlsFromJson(json_body):
     counter = 0
     success = False
 
-    # for item in data (max 25 items):
+    # for item in data (one item at a time):
     # cloning and analyzing takes approx 3 minutes for 10 items/repositories
     for item in body:
         print(f"{item}")
@@ -65,7 +68,7 @@ def analyze(filepath, output_path):
     print(filepath, output_path)
     subprocess.run([ 'dependency-check.sh','--scan', str(filepath), '--format',
                      'JSON', '--prettyPrint', '--out', output_path, 
-                      '--enableExperimental', '--disableRubygems' ])
+                      '--enableExperimental', '--disableRubygems' , '--noupdate'])
 
 def createJobForResults(path_to_results, language): #results already in JSON format
     # add language to JSON
