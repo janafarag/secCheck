@@ -13,7 +13,7 @@ import rmq_sender
 def readUrlsFromJson(json_body):
 
     #update dependency check once before running #TODO: move to Dockerfile
-    subprocess.run([ 'dependency-check.sh', '--updateonly'])
+    # subprocess.run([ 'dependency-check.sh', '--updateonly'])
     # create directory
     os.mkdir(DEPENDENCY_CHECK_OUTPUT)
 
@@ -24,20 +24,18 @@ def readUrlsFromJson(json_body):
 
     # for item in data (one item at a time):
     # cloning and analyzing takes approx 3 minutes for 10 items/repositories
-    for item in body:
-        print(f"{item}")
-        clone_url = item["clone_url"]
-        language = item["language"]
-        if item["hash"] == "":  # clone only most recent commit
-            cloneMostRecent(clone_url, CLONE_OUTPUTPATH)
-        else:
-            hash = item["hash"]
-            cloneWithHash(clone_url, hash, CLONE_OUTPUTPATH)
+    clone_url = body["clone_url"]
+    language = body["language"]
+    if body["hash"] == "":  # clone only most recent commit
+        cloneMostRecent(clone_url, CLONE_OUTPUTPATH)
+    else:
+        hash = body["hash"]
+        cloneWithHash(clone_url, hash, CLONE_OUTPUTPATH)
 
-        analyze(CLONE_OUTPUTPATH , DEPENDENCY_CHECK_OUTPUT) # analyze one an then delete it, better for memory
-        createJobForResults(DEPENDENCY_CHECK_OUTPUT + "/dependency-check-report.json", language) # better for traffic in RabbitMQ
-        # delete output every time
-        deleteOutput(CLONE_OUTPUTPATH, DEPENDENCY_CHECK_OUTPUT + "/dependency-check-report.json")
+    analyze(CLONE_OUTPUTPATH , DEPENDENCY_CHECK_OUTPUT) # analyze one an then delete it, better for memory
+    createJobForResults(DEPENDENCY_CHECK_OUTPUT + "/dependency-check-report.json", language) # better for traffic in RabbitMQ
+    # delete output every time
+    deleteOutput(CLONE_OUTPUTPATH, DEPENDENCY_CHECK_OUTPUT + "/dependency-check-report.json")
 
     #delete directory when finished
     shutil.rmtree(DEPENDENCY_CHECK_OUTPUT)

@@ -12,3 +12,6 @@
 
     # Tell the container to run the apache2 service
     CMD ["apache2ctl", "-D","FOREGROUND"]
+
+    # update dependency check once before running #TODO: move to Dockerfile !!!
+    # subprocess.run([ 'dependency-check.sh', '--updateonly'])

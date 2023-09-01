@@ -5,32 +5,6 @@ import json as js
 import downloader
 import rmq_sender
 
-def main():
-    rmq_sender.test()
-    credentials = pika.PlainCredentials("guest", "guest")
-    connection = pika.BlockingConnection(
-        pika.ConnectionParameters(
-            host="192.168.221.130", port=5672, virtual_host="/", credentials=credentials #umgebungvariablen
-        )
-    )
-    channel = connection.channel()
-
-    channel.queue_declare(queue="JobQueue")
-
-
-    def callback(ch, method, properties, body):
-        print(f" [x] Received {body}")
-
-        try:
-            fwdJobToDownloader(body, channel, method)
-        except(Exception) as e:
-            print(f"Execption was raisedddd>>{e}")
-
-    channel.basic_qos(prefetch_count=1)
-    channel.basic_consume(queue="JobQueue", on_message_callback=callback, auto_ack=True)
-
-    print(" [*] Waiting for messages. To exit press CTRL+C")
-    channel.start_consuming()
 
 # consume jobs with downloader to get info from API according to filters from UI
 def fwdJobToDownloader(body, channel, method):
@@ -72,14 +46,31 @@ def fwdJobToDownloader(body, channel, method):
             order=json_array["data"]["order"]
         )
 
+rmq_sender.test()
+credentials = pika.PlainCredentials("guest", "guest")
+connection = pika.BlockingConnection(
+    pika.ConnectionParameters(
+        host="192.168.221.130", port=5672, virtual_host="/", credentials=credentials #umgebungvariablen
+    )
+)
+channel = connection.channel()
+
+channel.queue_declare(queue="JobQueue")
 
 
-if __name__ == "__main__":
+def callback(ch, method, properties, body):
+    print(f" [x] Received {body}")
+
     try:
-        main()
-    except KeyboardInterrupt:
-        print("Interrupted")
-        try:
-            sys.exit(0)
-        except SystemExit:
-            os._exit(0)
+        fwdJobToDownloader(body, channel, method)
+    except(Exception) as e:
+        print(f"Execption was raisedddd>>{e.with_traceback}")
+
+channel.basic_qos(prefetch_count=1)
+channel.basic_consume(queue="JobQueue", on_message_callback=callback, auto_ack=True)
+
+print(" [*] Waiting for messages. To exit press CTRL+C")
+channel.start_consuming()
+
+
+

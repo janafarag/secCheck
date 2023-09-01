@@ -411,18 +411,16 @@ def responseMeetsCriteria(response, total_amount):
 
 # method to create jobs from given restriction with clone urls
 def createJobForUrls(clone_urls, languages, hashes=[]):
-    job_data = []
     global global_counter
 
     if hashes:
         for i in range(len(clone_urls)):
-            job_data.append(
-                {
+            job_data = {
                     "clone_url": clone_urls[i],
                     "language": languages[i],
                     "hash": hashes[i],
                 }
-            )
+            
             #create jobs for every repo, more fail safe
             json_body = js.dumps(job_data)
             print(json_body)
@@ -430,9 +428,11 @@ def createJobForUrls(clone_urls, languages, hashes=[]):
 
     else:
         for i in range(len(clone_urls)):
-            job_data.append(
-                {"clone_url": clone_urls[i], "language": languages[i], "hash": ""}
-            )
+            job_data = {
+                    "clone_url": clone_urls[i],
+                    "language": languages[i],
+                    "hash": "",
+                }
             json_body = js.dumps(job_data)
             print(json_body)
             rmq_sender.send_to_analyzer(json_body)
