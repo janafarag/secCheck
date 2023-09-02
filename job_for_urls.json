@@ -1,0 +1,35 @@
+[
+    {
+        "api": "repo",
+        "keyword": "react",
+        "language": "",
+        "created_from": "2020-12-30",
+        "created_till": "2020-12-31",
+        "sort_by": "stars",
+        "order": "desc"
+    },
+    {
+        "api": "code_general",
+        "keyword": "bug",
+        "limit_by_label_enabled": "True",
+        "label": "bug",
+        "total_amount": 1,
+        "sort_by": "stars",
+        "order": "desc"
+    },
+    {
+        "api": "commits",
+        "keyword": "fix",
+        "sort_by": "stars",
+        "order": "desc"
+    },
+    {
+        "api": "issues",
+        "keyword": "Zero Day",
+        "state": "open",
+        "created_from": "2020-12-30",
+        "created_till": "2020-12-31",
+        "sort_by": "stars",
+        "order": "desc"
+    }
+]
