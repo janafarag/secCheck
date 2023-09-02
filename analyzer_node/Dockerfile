@@ -49,8 +49,6 @@ USER appuser
 # Copy the source code into the container.
 COPY . .
 
-# # Expose the port that the application listens on.
-# EXPOSE 5672
 
 # Run the application.
 CMD ["python3", "rmq_receive_analyze.py"]

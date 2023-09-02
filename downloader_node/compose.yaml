@@ -8,11 +8,17 @@
 # database or a cache. For examples, see the Awesome Compose repository:
 # https://github.com/docker/awesome-compose
 services:
-  server:
-    build:
-      context: .
+  mq:
+    image: rabbitmq:3.12-management
     ports:
       - 5672:5672
+      - 15672:15672
+  worker:
+    build:
+      context: .
+    depends_on:
+      mq:
+        condition: service_started
 
 # The commented out section below is an example of how to define a PostgreSQL
 # database that your application can use. `depends_on` tells Docker Compose to

@@ -19,10 +19,6 @@ services:
     depends_on:
       mq:
         condition: service_started
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-      RABBITMQ_DEFAULT_VHOST: rabbitmq:3.12-management
 
 # The commented out section below is an example of how to define a PostgreSQL
 # database that your application can use. `depends_on` tells Docker Compose to

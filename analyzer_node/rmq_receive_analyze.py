@@ -4,12 +4,13 @@ import pika, sys, os
 import analyzer
 
 # Get the environment variables
-user = os.environ["RABBITMQ_DEFAULT_USER"]
-password = os.environ["RABBITMQ_DEFAULT_PASS"]
-vhost = os.environ["RABBITMQ_DEFAULT_VHOST"]
+# user = os.environ["RABBITMQ_DEFAULT_USER"]
+# password = os.environ["RABBITMQ_DEFAULT_PASS"]
+# vhost = os.environ["RABBITMQ_DEFAULT_VHOST"]
+rabbit_url = os.environ["RABBIT_URL"]
 
-# Create the credentials object
-credentials = pika.PlainCredentials(user, password)
+# # Create the credentials object
+# credentials = pika.PlainCredentials(user, password)
 
 
 def fwdJobToAnalyzer(body, channel, method):
@@ -19,8 +20,7 @@ def fwdJobToAnalyzer(body, channel, method):
     
 def main():
 
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=15672,
-                                                                    virtual_host='/', credentials=credentials, heartbeat=600)) # heartbeat is set to 10 minutes
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='mq', heartbeat=600)) # heartbeat is set to 10 minutes
     channel = connection.channel()
 
     channel.queue_declare(queue='AnalyzerQueue2', durable=True)

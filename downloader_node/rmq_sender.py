@@ -4,7 +4,7 @@ import json as js
 
 
 def send_to_analyzer(body):
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host="mq"))
     channel = connection.channel()
 
     channel.queue_declare(queue="AnalyzerQueue2", durable= True)
@@ -16,20 +16,6 @@ def send_to_analyzer(body):
     connection.close()
 
 
-def send_results(body):
-    credentials = pika.PlainCredentials("guest", "guest")
-    connection = pika.BlockingConnection(
-        pika.ConnectionParameters(
-            host="192.168.221.130", port=5672, virtual_host="/", credentials=credentials
-        )
-    )
-    channel = connection.channel()
-
-    channel.queue_declare(queue="DependencyCheckQueue")
-
-    channel.basic_publish(exchange="", routing_key="DependencyCheckQueue", body=body)
-    print(" [x] Sent resultsss!")
-    connection.close()
 
 
 def test():
@@ -50,7 +36,7 @@ def test():
     credentials = pika.PlainCredentials("guest", "guest")
     connection = pika.BlockingConnection(
         pika.ConnectionParameters(
-            host="localhost" #host="192.168.221.130", port=5672, virtual_host="/", credentials=credentials
+            host="mq" #host="192.168.221.130", port=5672, virtual_host="/", credentials=credentials
         )
     )
     channel = connection.channel()
