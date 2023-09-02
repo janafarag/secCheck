@@ -1,21 +1,52 @@
-    # THIS IS A COMMENT
-    FROM python:3.9
-    WORKDIR /First_try
-    COPY requirements.txt .
-    RUN pip install -r requirements.txt
+# syntax=docker/dockerfile:1
 
-    # Update the APT repository to ensure we get the latest version of apache2
-    RUN apt-get update -y 
+# Comments are provided throughout this file to help you get started.
+# If you need more help, visit the Dockerfile reference guide at
+# https://docs.docker.com/engine/reference/builder/
 
-    # Install apache2
-    RUN apt-get install apache2 -y
+ARG PYTHON_VERSION=3.10.12
+FROM python:${PYTHON_VERSION}-slim as base
 
-    # Tell the container to expose port 80 to allow us to connect to the web server
-    EXPOSE 80 
+# Prevents Python from writing pyc files.
+ENV PYTHONDONTWRITEBYTECODE=1
 
-    # Tell the container to run the apache2 service
-    CMD ["apache2ctl", "-D","FOREGROUND"]
+# Keeps Python from buffering stdout and stderr to avoid situations where
+# the application crashes without emitting any logs due to buffering.
+ENV PYTHONUNBUFFERED=1
 
-    # update dependency check once before running #TODO: move to Dockerfile !!!
-    # subprocess.run([ 'dependency-check.sh', '--updateonly'])
+WORKDIR /app
 
+# Create a non-privileged user that the app will run under.
+# See https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#user
+ARG UID=10001
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --home "/nonexistent" \
+    --shell "/sbin/nologin" \
+    --no-create-home \
+    --uid "${UID}" \
+    appuser
+
+# Download dependencies as a separate step to take advantage of Docker's caching.
+# Leverage a cache mount to /root/.cache/pip to speed up subsequent builds.
+# Leverage a bind mount to requirements.txt to avoid having to copy them into
+# into this layer.
+RUN --mount=type=cache,target=/root/.cache/pip \
+    --mount=type=bind,source=requirements.txt,target=requirements.txt \
+    python -m pip install -r requirements.txt
+
+# Switch to the non-privileged user to run the application.
+USER appuser
+
+# Copy the source code into the container.
+COPY . .
+
+# Expose the port that the application listens on.
+EXPOSE 5672
+
+# Run the application.
+CMD python3 rmq_receive_analyze.py
+
+# update dependency check once before running #TODO: move to Dockerfile !!!
+# subprocess.run([ 'dependency-check.sh', '--updateonly'])

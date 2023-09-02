@@ -50,7 +50,7 @@ def test():
     credentials = pika.PlainCredentials("guest", "guest")
     connection = pika.BlockingConnection(
         pika.ConnectionParameters(
-            host="192.168.221.130", port=5672, virtual_host="/", credentials=credentials
+            host="localhost" #host="192.168.221.130", port=5672, virtual_host="/", credentials=credentials
         )
     )
     channel = connection.channel()

@@ -14,7 +14,7 @@ def fwdJobToAnalyzer(body, channel, method):
     
 def main():
 
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', heartbeat=600))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', heartbeat=600)) # heartbeat is set to 10 minutes
     channel = connection.channel()
 
     channel.queue_declare(queue='AnalyzerQueue2', durable=True)
@@ -24,7 +24,7 @@ def main():
         print(f" [x] Received {body}")
 
         try: 
-            fwdJobToAnalyzer(body, ch, method)
+            fwdJobToAnalyzer(body, ch, method) # approx 30 minutes for 68 jobs
             print(" [x] Done!!!!! YAY")
             ch.basic_ack(delivery_tag = method.delivery_tag) # default time for waiting for ack is 30 minutes
         except(Exception) as e:
