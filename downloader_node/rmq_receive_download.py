@@ -46,31 +46,45 @@ def fwdJobToDownloader(body, channel, method):
             order=json_array["data"]["order"]
         )
 
-rmq_sender.test()
-credentials = pika.PlainCredentials("guest", "guest")
-connection = pika.BlockingConnection(
-    pika.ConnectionParameters(
-        host="192.168.221.130", port=5672, virtual_host="/", credentials=credentials #umgebungvariablen
+def main():
+
+    rmq_sender.test()
+    credentials = pika.PlainCredentials("guest", "guest")
+    connection = pika.BlockingConnection(
+        pika.ConnectionParameters(
+            host="192.168.221.130", port=5672, virtual_host="/", credentials=credentials #umgebungvariablen
+        )
     )
-)
-channel = connection.channel()
+    channel = connection.channel()
 
-channel.queue_declare(queue="JobQueue")
+    channel.queue_declare(queue="JobQueue")
 
 
-def callback(ch, method, properties, body):
-    print(f" [x] Received {body}")
+    def callback(ch, method, properties, body):
+        print(f" [x] Received {body}")
 
+        try:
+            fwdJobToDownloader(body, channel, method)
+        except(Exception) as e:
+            print(f"Execption was raisedddd>>{e.with_traceback}")
+
+    channel.basic_qos(prefetch_count=1)
+    channel.basic_consume(queue="JobQueue", on_message_callback=callback, auto_ack=True)
+
+    print(" [*] Waiting for messages. To exit press CTRL+C")
+    channel.start_consuming()
+
+
+if __name__ == '__main__':
     try:
-        fwdJobToDownloader(body, channel, method)
-    except(Exception) as e:
-        print(f"Execption was raisedddd>>{e.with_traceback}")
+        main()
+    except KeyboardInterrupt:
+        print('Interrupted')
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)
 
-channel.basic_qos(prefetch_count=1)
-channel.basic_consume(queue="JobQueue", on_message_callback=callback, auto_ack=True)
-
-print(" [*] Waiting for messages. To exit press CTRL+C")
-channel.start_consuming()
 
 
 

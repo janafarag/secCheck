@@ -1,5 +1,8 @@
     # THIS IS A COMMENT
     FROM python:3.9
+    WORKDIR /First_try
+    COPY requirements.txt .
+    RUN pip install -r requirements.txt
 
     # Update the APT repository to ensure we get the latest version of apache2
     RUN apt-get update -y 
@@ -15,3 +18,4 @@
 
     # update dependency check once before running #TODO: move to Dockerfile !!!
     # subprocess.run([ 'dependency-check.sh', '--updateonly'])
+

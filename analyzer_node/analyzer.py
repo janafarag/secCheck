@@ -81,7 +81,8 @@ def createJobForResults(path_to_results, language): #results already in JSON for
 
     # Load the JSON data into a Python dictionary
     print(json_data)
-    rmq_sender.send_results(json_data)
+    # rmq_sender.send_results(json_data) # TODO: uncomment
+    rmq_sender.send_test_after_analyzer(json_data)
     f.close()
 
 def deleteOutput(clone_output, dependency_check_output):

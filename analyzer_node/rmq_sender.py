@@ -15,6 +15,16 @@ def send_to_analyzer(body):
     print(" [x] Sent analyzer job!'")
     connection.close()
 
+def send_test_after_analyzer(body):
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
+    channel = connection.channel()
+
+    channel.queue_declare(queue="AnalyzerQueueResults")
+
+    channel.basic_publish(exchange="", routing_key="AnalyzerQueueResults", body=body)
+    print(" [x] Sent analyzer results!'")
+    connection.close()
+
 
 def send_results(body):
     credentials = pika.PlainCredentials("guest", "guest")
