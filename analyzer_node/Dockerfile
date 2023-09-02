@@ -5,7 +5,7 @@
 # https://docs.docker.com/engine/reference/builder/
 
 ARG PYTHON_VERSION=3.10.12
-FROM python:${PYTHON_VERSION}-slim as base
+FROM python:${PYTHON_VERSION}-alpine as base
 
 # Prevents Python from writing pyc files.
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -14,7 +14,12 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # the application crashes without emitting any logs due to buffering.
 ENV PYTHONUNBUFFERED=1
 
+
 WORKDIR /app
+
+
+# install git # prerequisite for gitpython
+RUN apk update && apk add git 
 
 # Create a non-privileged user that the app will run under.
 # See https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#user
@@ -36,17 +41,19 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     --mount=type=bind,source=requirements.txt,target=requirements.txt \
     python -m pip install -r requirements.txt
 
+
+
 # Switch to the non-privileged user to run the application.
 USER appuser
 
 # Copy the source code into the container.
 COPY . .
 
-# Expose the port that the application listens on.
-EXPOSE 5672
+# # Expose the port that the application listens on.
+# EXPOSE 5672
 
 # Run the application.
-CMD python3 rmq_receive_analyze.py
+CMD ["python3", "rmq_receive_analyze.py"]
 
 # update dependency check once before running #TODO: move to Dockerfile !!!
 # subprocess.run([ 'dependency-check.sh', '--updateonly'])
