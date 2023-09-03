@@ -33,7 +33,7 @@ def readUrlsFromJson(json_body):
         cloneWithHash(clone_url, hash, CLONE_OUTPUTPATH)
 
     analyze(CLONE_OUTPUTPATH , DEPENDENCY_CHECK_OUTPUT) # analyze one an then delete it, better for memory
-    createJobForResults(DEPENDENCY_CHECK_OUTPUT + "/dependency-check-report.json", language) # better for traffic in RabbitMQ
+    createJobForResults(DEPENDENCY_CHECK_OUTPUT + "/dependency-check-report.json", language, clone_url) # better for traffic in RabbitMQ
     # delete output every time
     deleteOutput(CLONE_OUTPUTPATH, DEPENDENCY_CHECK_OUTPUT + "/dependency-check-report.json")
 
@@ -68,7 +68,7 @@ def analyze(filepath, output_path):
                      'JSON', '--prettyPrint', '--out', output_path, 
                       '--enableExperimental', '--disableRubygems' , '--noupdate'])
 
-def createJobForResults(path_to_results, language): #results already in JSON format
+def createJobForResults(path_to_results, language, clone_url): #results already in JSON format
     # add language to JSON
     print(f"print job for PATH: {path_to_results} and LANGUAGE: {language}")
     # Open the JSON file and read its contents
@@ -77,10 +77,10 @@ def createJobForResults(path_to_results, language): #results already in JSON for
 
     json_array = js.loads(json_data)
     json_array['language'] = language
+    git_link = clone_url.replace(".git","")
+    json_array['link'] = git_link
     json_data = js.dumps(json_array)
 
-    # Load the JSON data into a Python dictionary
-    print(json_data)
     # rmq_sender.send_results(json_data) # TODO: uncomment
     rmq_sender.send_test_after_analyzer(json_data)
     f.close()
