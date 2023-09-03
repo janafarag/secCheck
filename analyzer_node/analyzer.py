@@ -78,7 +78,7 @@ def createJobForResults(path_to_results, language, clone_url): #results already 
     json_array = js.loads(json_data)
     json_array['language'] = language
     git_link = clone_url.replace(".git","")
-    json_array['link'] = git_link
+    json_array['git_link'] = git_link
     json_data = js.dumps(json_array)
 
     # rmq_sender.send_results(json_data) # TODO: uncomment
