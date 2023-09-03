@@ -22,12 +22,12 @@ def main():
     def callback(ch, method, properties, body):
         print(f" [x] Received {body}")
 
-        try: 
-            fwdJobToAnalyzer(body, ch, method) # approx 30 minutes for 68 jobs
-            print(" [x] Done!!!!! YAY")
-            ch.basic_ack(delivery_tag = method.delivery_tag) # default time for waiting for ack is 30 minutes
-        except(Exception) as e:
-            print(f"Execption was raisedddd>>{e}")
+        # try: 
+        fwdJobToAnalyzer(body, ch, method) # approx 30 minutes for 68 jobs
+        print(" [x] Done!!!!! YAY")
+        ch.basic_ack(delivery_tag = method.delivery_tag) # default time for waiting for ack is 30 minutes
+        # except(Exception) as e:
+        #     print(f"Execption was raisedddd>>{e}")
 
     channel.basic_qos(prefetch_count=1)
     # round robin by default if more wokers are active

@@ -17,6 +17,8 @@ def readUrlsFromJson(json_body):
     #update dependency check once before running #TODO: move to Dockerfile
     # subprocess.run([ 'dependency-check.sh', '--updateonly'])
     # create directory
+    if not os.path.exists('analyzer_node'): # directory doesn't exist in docker
+        os.mkdir('analyzer_node')
     os.mkdir(DEPENDENCY_CHECK_OUTPUT)
 
     body = js.loads(json_body)
