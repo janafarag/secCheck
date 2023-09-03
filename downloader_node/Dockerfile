@@ -48,6 +48,3 @@ COPY . .
 
 # Run the application.
 CMD python3 rmq_receive_download.py
-
-# update dependency check once before running #TODO: move to Dockerfile !!!
-# subprocess.run([ 'dependency-check.sh', '--updateonly'])

@@ -21,6 +21,8 @@ WORKDIR /app
 # install git # prerequisite for gitpython
 RUN apk update && apk add git 
 
+#TODO: download dependency check cli
+
 # Create a non-privileged user that the app will run under.
 # See https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#user
 ARG UID=10001

@@ -3,14 +3,7 @@
 import pika, sys, os
 import analyzer
 
-# Get the environment variables
-# user = os.environ["RABBITMQ_DEFAULT_USER"]
-# password = os.environ["RABBITMQ_DEFAULT_PASS"]
-# vhost = os.environ["RABBITMQ_DEFAULT_VHOST"]
-rabbit_url = os.environ["RABBIT_URL"]
 
-# # Create the credentials object
-# credentials = pika.PlainCredentials(user, password)
 
 
 def fwdJobToAnalyzer(body, channel, method):
