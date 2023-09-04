@@ -1,14 +1,12 @@
 # syntax=docker/dockerfile:1
 
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Dockerfile reference guide at
-# https://docs.docker.com/engine/reference/builder/
+# reference guide at https://docs.docker.com/engine/reference/builder/
 
-FROM alpine:3.14
+FROM alpine:3.17
 
 
 ### 2. Get Java via the package manager
-RUN  apk update \
+RUN  apk update \ 
   && apk upgrade \
   && apk add ca-certificates \
   && update-ca-certificates \
@@ -17,11 +15,19 @@ RUN  apk update \
   && apk add --no-cache nss 
 
 # and maven (requirement for dependency check)
-RUN apk update && apk add --no-cache maven
+RUN apk add --no-cache maven
 
-# TODO: add .NET (6 runtime or SDK), npm, pnpm, yarn and go
+# add npm, pnpm, yarn and go
+RUN apk --no-cache add curl && \
+curl -L https://unpkg.com/@pnpm/self-installer &&\
+apk add nodejs npm && \
+npm install --global yarn && \
+apk add go 
 
-
+# install dependencies and core runtime as it includes both .NET and ASP.NET Core runtimes. and don't install JDK
+# cause we won#t develop an .NET app but only run (only runtime is needed)
+RUN apk add bash icu-libs krb5-libs libgcc libintl libssl1.1 libstdc++ zlib libgdiplus && \
+apk add aspnetcore6-runtime
 
 ### 3. Get Python, PIP
 RUN apk add --no-cache python3 \
@@ -40,9 +46,8 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 ## 4. Get Git
-
 # install git # prerequisite for gitpython
-RUN apk update && apk add git 
+RUN apk add git 
 
 
 WORKDIR /app
@@ -52,8 +57,7 @@ WORKDIR /app
 
 
 # download dependency check cli and update database of dependency check every time container starts
-RUN apk --no-cache add curl && \
-    apk add zip && \
+RUN apk add zip && \
     VERSION=$(curl -s https://jeremylong.github.io/DependencyCheck/current.txt) && \
     curl -Ls "https://github.com/jeremylong/DependencyCheck/releases/download/v$VERSION/dependency-check-$VERSION-release.zip" --output dependency-check.zip && \
     unzip dependency-check.zip && \
@@ -71,7 +75,6 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 
 # Copy the source code into the container.
 COPY . .
-
 
 # Run the application.
 CMD ["python3", "rmq_receive_analyze.py"]

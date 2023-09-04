@@ -70,7 +70,7 @@ def analyze(filepath, output_path):
     print(filepath, output_path)
     subprocess.run([ 'dependency-check.sh','--scan', str(filepath), '--format',
                      'JSON', '--prettyPrint', '--out', output_path, 
-                      '--enableExperimental', '--disableRubygems' , '--noupdate'])
+                      '--enableExperimental', '--disableRubygems' , '--disableBundleAudit' '--noupdate'])
 
 def createJobForResults(path_to_results, language, clone_url): #results already in JSON format
     # add language to JSON
