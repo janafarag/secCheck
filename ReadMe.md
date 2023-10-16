@@ -1,5 +1,15 @@
 @ -1,41 +0,0 @@
-# secCheck
+# secCheck (downloader_node and analyzer_node) usage
+
+1. `docker compose build`
+2. `docker docker compose up`
+
+## API Endpoint examples for downloader.py
+
+The file job_for_urls.json contains a list of examples (one for each API endpoint) of how the "data" variable from the frontend could be filled in the expected format
+It is an example list of different job data for every API endpoint in the correct format for further processing 
+
+# secCheck prerequsistes without Docker Compose (not needed anymore)
 
 Feature branch to dowload projects from Github.
 Exemplary this will be done to a subset of repositories
@@ -12,7 +22,7 @@ Steps to get it to work:
 
 `access_token = 'Bearer <PERSONAL_ACCESS_TOKEN_HERE>'`
 
-3. install dependency check CLI with link in Guthub pages, link: 
+3. install dependency check CLI with link in Github pages, link: 
 
 https://jeremylong.github.io/DependencyCheck/dependency-check-cli/index.html
 
@@ -40,3 +50,4 @@ https://jeremylong.github.io/DependencyCheck/dependency-check-cli/index.html
 To activate virtual env:
 
 `source .venv/bin/activate`
+
