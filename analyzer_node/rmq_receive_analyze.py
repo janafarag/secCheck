@@ -5,7 +5,6 @@ import analyzer
 
 
 
-#TODO: make fail safe
 
 def fwdJobToAnalyzer(body, channel, method):
     # consumer side exception handling
@@ -14,7 +13,7 @@ def fwdJobToAnalyzer(body, channel, method):
     
 def main():
 
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', heartbeat=600)) # heartbeat is set to 10 minutes
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='mq', heartbeat=600)) # heartbeat is set to 10 minutes
     channel = connection.channel()
 
     channel.queue_declare(queue='AnalyzerQueue2', durable=True)
@@ -23,12 +22,12 @@ def main():
     def callback(ch, method, properties, body):
         print(f" [x] Received {body}")
 
-        try: 
-            fwdJobToAnalyzer(body, ch, method) # approx 30 minutes for 68 jobs
-            print(" [x] Done!!!!! YAY")
-            ch.basic_ack(delivery_tag = method.delivery_tag) # default time for waiting for ack is 30 minutes
-        except(Exception) as e:
-            print(f"Execption was raisedddd>>{e}")
+        # try: 
+        fwdJobToAnalyzer(body, ch, method) # approx 30 minutes for 68 jobs
+        print(" [x] Done!!!!! YAY")
+        ch.basic_ack(delivery_tag = method.delivery_tag) # default time for waiting for ack is 30 minutes
+        # except(Exception) as e:
+        #     print(f"Execption was raisedddd>>{e}")
 
     channel.basic_qos(prefetch_count=1)
     # round robin by default if more wokers are active

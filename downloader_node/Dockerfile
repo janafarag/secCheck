@@ -5,7 +5,7 @@
 # https://docs.docker.com/engine/reference/builder/
 
 ARG PYTHON_VERSION=3.10.12
-FROM python:${PYTHON_VERSION}-slim as base
+FROM python:${PYTHON_VERSION}-alpine as base
 
 # Prevents Python from writing pyc files.
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -15,6 +15,9 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
+
+# install git # prerequisite for gitpython
+RUN apk update && apk add git 
 
 # Create a non-privileged user that the app will run under.
 # See https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#user
@@ -42,11 +45,6 @@ USER appuser
 # Copy the source code into the container.
 COPY . .
 
-# Expose the port that the application listens on.
-EXPOSE 5672
 
 # Run the application.
 CMD python3 rmq_receive_download.py
-
-# update dependency check once before running #TODO: move to Dockerfile !!!
-# subprocess.run([ 'dependency-check.sh', '--updateonly'])
